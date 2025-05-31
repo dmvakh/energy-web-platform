@@ -9,6 +9,8 @@ import { Schedule } from "./components/routes/schedule";
 import { Finance } from "./components/routes/finance";
 import { Document } from "./components/routes/document";
 
+import "wx-react-gantt/dist/gantt.css";
+
 function App() {
   const user = { id: "1", email: "test@user.mail" };
 
