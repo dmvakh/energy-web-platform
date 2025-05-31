@@ -2,7 +2,6 @@ import { Avatar } from "../catalyst/avatar";
 import {
   Dropdown,
   DropdownButton,
-  DropdownDivider,
   DropdownItem,
   DropdownLabel,
   DropdownMenu,

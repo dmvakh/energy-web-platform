@@ -8,7 +8,19 @@ const statuses = {
   Withdraw: "text-gray-600 bg-gray-50 ring-gray-500/10",
   Overdue: "text-red-700 bg-red-50 ring-red-600/10",
 };
-const clients = [
+type Status = keyof typeof statuses;
+
+const clients: {
+  id: number;
+  name: string;
+  imageUrl: string;
+  lastInvoice: {
+    date: string;
+    dateTime: string;
+    amount: string;
+    status: Status;
+  };
+}[] = [
   {
     id: 1,
     name: "Project #1",
@@ -53,10 +65,7 @@ export const ProjectsList = () => {
         <Button>New project</Button>
       </div>
 
-      <ul
-        role='list'
-        className='mt-10 grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8'
-      >
+      <ul className='mt-10 grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8'>
         {clients.map((client) => (
           <li
             key={client.id}

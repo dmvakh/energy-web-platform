@@ -1,4 +1,3 @@
-import { Button } from "@headlessui/react";
 import { Heading } from "../catalyst";
 
 export const Dashboard = () => {

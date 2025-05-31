@@ -16,7 +16,7 @@ function App() {
     <AppLayout user={user as User}>
       <Routes>
         <Route path='/' element={<Dashboard />} />
-        <Route path='project'>
+        <Route path='/project'>
           <Route index element={<ProjectsList />} />
           <Route element={<ProjectLayout />}>
             <Route path=':pid' element={<Project />} />
