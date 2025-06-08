@@ -1,27 +1,12 @@
+import { useState, useEffect } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import EllipsisHorizontalIcon from "@heroicons/react/20/solid/EllipsisHorizontalIcon";
 import { Button, Heading } from "../catalyst";
 import clsx from "clsx";
-import { getProjects } from "../../api/projects";
+import { getTasks } from "../../api/tasks";
 
-const statuses = {
-  Paid: "text-green-700 bg-green-50 ring-green-600/20",
-  Withdraw: "text-gray-600 bg-gray-50 ring-gray-500/10",
-  Overdue: "text-red-700 bg-red-50 ring-red-600/10",
-};
-type Status = keyof typeof statuses;
-
-const clients: {
-  id: number;
-  name: string;
-  imageUrl: string;
-  lastInvoice: {
-    date: string;
-    dateTime: string;
-    amount: string;
-    status: Status;
-  };
-}[] = [
+// --- ваши текущие моки ---
+const clientsMock = [
   {
     id: 1,
     name: "Project #1",
@@ -58,7 +43,41 @@ const clients: {
   },
 ];
 
+const statuses = {
+  Paid: "text-green-700 bg-green-50 ring-green-600/20",
+  Withdraw: "text-gray-600 bg-gray-50 ring-gray-500/10",
+  Overdue: "text-red-700 bg-red-50 ring-red-600/10",
+};
+type Status = keyof typeof statuses;
+
+// Тип для объединённых данных
+type ProjectCard = (typeof clientsMock)[number] & {
+  /* можно добавить поля из API, если нужно */
+};
+
 export const ProjectsList = () => {
+  const [projects, setProjects] = useState<ProjectCard[]>(clientsMock);
+
+  useEffect(() => {
+    getTasks().then((apiProjects) => {
+      // Привязываем моковые поля к первым трем проектам из API
+      const merged = apiProjects.map((proj, idx) => {
+        const mock = clientsMock[idx] || clientsMock[0];
+        return {
+          // берём id и title из API
+          id: proj.id,
+          name: proj.title,
+          // подставляем моковую картинку + статус
+          imageUrl: mock.imageUrl,
+          lastInvoice: mock.lastInvoice,
+          // и все прочие поля из API, если понадобятся позже
+          ...proj,
+        };
+      });
+      setProjects(merged);
+    });
+  }, []);
+
   return (
     <>
       <div className="flex w-full flex-wrap items-end justify-between gap-4 border-b border-zinc-950/10 pb-6 dark:border-white/10">
@@ -67,7 +86,7 @@ export const ProjectsList = () => {
       </div>
 
       <ul className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8">
-        {clients.map((client) => (
+        {projects.map((client) => (
           <li
             key={client.id}
             className="overflow-hidden rounded-xl border border-gray-200"
@@ -95,7 +114,7 @@ export const ProjectsList = () => {
                 >
                   <MenuItem>
                     <a
-                      href="/project/id/"
+                      href={`/project/${client.id}/`}
                       className="block px-3 py-1 text-sm/6 text-gray-900 data-focus:bg-gray-50 data-focus:outline-hidden"
                     >
                       View<span className="sr-only">, {client.name}</span>
