@@ -1,6 +1,8 @@
 import { NavLink, Outlet, useLocation, useParams } from "react-router";
 import { Heading } from "../catalyst";
 import clsx from "clsx";
+import { useEffect } from "react";
+import { getTaskById } from "../../api";
 
 const tabs = [
   { name: "Обзор", href: "", current: false },
@@ -13,27 +15,31 @@ export const ProjectLayout = () => {
   const { pid } = useParams();
   const location = useLocation();
 
+  useEffect(() => {
+    const data = getTaskById(pid);
+  }, [pid]);
+
   return (
     <>
-      <div className='flex w-full flex-wrap items-end justify-between gap-4 border-b border-zinc-950/10 pb-6 dark:border-white/10'>
+      <div className="flex w-full flex-wrap items-end justify-between gap-4 border-b border-zinc-950/10 pb-6 dark:border-white/10">
         <Heading>Project: Current Project</Heading>
       </div>
-      <div className='my-4'>
-        <div className='grid grid-cols-1 sm:hidden'>
+      <div className="my-4">
+        <div className="grid grid-cols-1 sm:hidden">
           {/* Use an "onChange" listener to redirect the user to the selected tab URL. */}
           <select
             defaultValue={tabs.find((tab) => tab.current)?.name ?? tabs[0].name}
-            aria-label='Select a tab'
-            className='col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600'
+            aria-label="Select a tab"
+            className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
           >
             {tabs.map((tab) => (
               <option key={tab.name}>{tab.name}</option>
             ))}
           </select>
         </div>
-        <div className='hidden sm:block'>
-          <div className='border-b border-gray-200'>
-            <nav aria-label='Tabs' className='-mb-px flex space-x-8'>
+        <div className="hidden sm:block">
+          <div className="border-b border-gray-200">
+            <nav aria-label="Tabs" className="-mb-px flex space-x-8">
               {tabs.map((tab) => {
                 const to = `/project/${pid}/${tab.href}`;
                 const isActive =

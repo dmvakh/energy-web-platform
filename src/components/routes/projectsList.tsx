@@ -44,9 +44,9 @@ const clientsMock = [
 ];
 
 const statuses = {
-  Paid: "text-green-700 bg-green-50 ring-green-600/20",
-  Withdraw: "text-gray-600 bg-gray-50 ring-gray-500/10",
-  Overdue: "text-red-700 bg-red-50 ring-red-600/10",
+  PENDING: "text-green-700 bg-green-50 ring-green-600/20",
+  IN_PROGRESS: "text-gray-600 bg-gray-50 ring-gray-500/10",
+  REVIEW: "text-red-700 bg-red-50 ring-red-600/10",
 };
 type Status = keyof typeof statuses;
 
@@ -56,7 +56,7 @@ type ProjectCard = (typeof clientsMock)[number] & {
 };
 
 export const ProjectsList = () => {
-  const [projects, setProjects] = useState<ProjectCard[]>(clientsMock);
+  const [projects, setProjects] = useState<ProjectCard[]>([]);
 
   useEffect(() => {
     getTasks().then((apiProjects) => {
@@ -69,7 +69,7 @@ export const ProjectsList = () => {
           name: proj.title,
           // подставляем моковую картинку + статус
           imageUrl: mock.imageUrl,
-          lastInvoice: mock.lastInvoice,
+          // lastInvoice: mock.lastInvoice,
           // и все прочие поля из API, если понадобятся позже
           ...proj,
         };
@@ -125,26 +125,30 @@ export const ProjectsList = () => {
             </div>
             <dl className="-my-3 divide-y divide-gray-100 px-6 py-4 text-sm/6">
               <div className="flex justify-between gap-x-4 py-3">
-                <dt className="text-gray-500">Last update</dt>
+                <dt className="text-gray-500">Start</dt>
                 <dd className="text-gray-700">
-                  <time dateTime={client.lastInvoice.dateTime}>
-                    {client.lastInvoice.date}
-                  </time>
+                  <time dateTime={client.start_date}>{client.start_date}</time>
                 </dd>
               </div>
               <div className="flex justify-between gap-x-4 py-3">
-                <dt className="text-gray-500">Amount</dt>
+                <dt className="text-gray-500">End</dt>
+                <dd className="text-gray-700">
+                  <time dateTime={client.end_date}>{client.end_date}</time>
+                </dd>
+              </div>
+              <div className="flex justify-between gap-x-4 py-3">
+                <dt className="text-gray-500">Balance</dt>
                 <dd className="flex items-start gap-x-2">
                   <div className="font-medium text-gray-900">
-                    {client.lastInvoice.amount}
+                    {client.transactions_summary[0].total_amount}
                   </div>
                   <div
                     className={clsx(
-                      statuses[client.lastInvoice.status],
+                      statuses[client.status],
                       "rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset",
                     )}
                   >
-                    {client.lastInvoice.status}
+                    {client.status}
                   </div>
                 </dd>
               </div>

@@ -1,7 +1,33 @@
 import { supabase } from "./getClient";
 
 export const getTasks = async () => {
-  const result = await supabase.from("tasks").select();
+  const result = await supabase
+    .from("tasks")
+    .select(
+      `
+      *,
+      transactions_summary(total_amount)
+    `,
+    )
+    .eq("type", "PROJECT");
+
+  if (result.error) {
+    throw Error(`${result.error} ${result.statusText}`);
+  }
+  return result.data;
+};
+
+export const getTaskById = async (id: string) => {
+  const result = await supabase
+    .from("tasks")
+    .select(
+      `
+      *,
+      transactions_summary(total_amount)
+    `,
+    )
+    .eq("id", id);
+
   if (result.error) {
     throw Error(`${result.error} ${result.statusText}`);
   }
