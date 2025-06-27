@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router";
 import { supabase } from "../../api";
-import { AuthLayout, Button } from "../catalyst";
+import { AuthLayout, Button, Strong } from "../catalyst";
 import { Input, InputGroup } from "../catalyst/input";
+import { useState } from "react";
 export const Login = () => {
   const navigate = useNavigate();
+  const [isError, setError] = useState(false);
   const loginPassword = async (evt: React.FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
     const form = evt.currentTarget;
@@ -23,6 +25,8 @@ export const Login = () => {
 
     if (!error) {
       navigate("/");
+    } else {
+      setError(true);
     }
 
     console.log(data, error);
@@ -37,6 +41,7 @@ export const Login = () => {
         <InputGroup>
           <Input type="password" name="password" placeholder="password" />
         </InputGroup>
+        {isError && <Strong>Incorrect login or password</Strong>}
         <Button color="violet" type="submit">
           submit
         </Button>

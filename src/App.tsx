@@ -1,6 +1,6 @@
-import { Route, Routes, useNavigate } from "react-router";
+import { Route, Routes, Outlet } from "react-router";
 import "./App.css";
-import { AppLayout, type User } from "./components/layout/appLayout";
+import { AppLayout } from "./components/layout/appLayout";
 import { Dashboard } from "./components/routes/dashboard";
 import { ProjectsList } from "./components/routes/projectsList";
 import { Project } from "./components/routes/project";
@@ -11,47 +11,33 @@ import { Document } from "./components/routes/document";
 import { Login } from "./components/routes/login";
 
 import "wx-react-gantt/dist/gantt.css";
-import { supabase } from "./api/getClient";
-import { useEffect, useState } from "react";
+import { ProtectedRoute } from "./components/routes/protectedRoute";
 
 function App() {
-  const navigate = useNavigate();
-  const getUser = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      navigate("/login");
-    }
-    return user;
-  };
-
-  const [user, setUser] = useState({ id: "-1", email: "anonimous" });
-
-  useEffect(() => {
-    const data = getUser();
-    if (data) {
-      setUser(data);
-    }
-  }, []);
-
   return (
-    <AppLayout user={user as User}>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/project">
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <Outlet />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="project">
           <Route index element={<ProjectsList />} />
           <Route element={<ProjectLayout />}>
-            <Route path=":pid" element={<Project />} />
-            <Route path=":pid/schedule" element={<Schedule />} />
-            <Route path=":pid/finance" element={<Finance />} />
-            <Route path=":pid/document" element={<Document />} />
+            <Route path=":id" element={<Project />} />
+            <Route path=":id/schedule" element={<Schedule />} />
+            <Route path=":id/finance" element={<Finance />} />
+            <Route path=":id/document" element={<Document />} />
           </Route>
         </Route>
-        <Route path="/login" element={<Login />} />
-      </Routes>
-    </AppLayout>
+      </Route>
+    </Routes>
   );
 }
-
 export default App;

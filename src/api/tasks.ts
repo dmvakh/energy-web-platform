@@ -1,33 +1,62 @@
-import { supabase } from "./getClient";
+import { supabase } from ".";
+import type { TTaskWithUnits } from ".";
 
-export const getTasks = async () => {
-  const result = await supabase.from("tasks").select();
-  // const result = await supabase
-  //   .from("tasks")
-  //   .select(
-  //     `
-  //     *,
-  //     transactions_summary(total_amount)
-  //   `,
-  //   )
-  //   .eq("type", "PROJECT");
-  console.log(result.data);
-  if (result.error) {
-    throw Error(`${result.error} ${result.statusText}`);
-  }
-  return result.data;
-};
-
-export const getTaskById = async (id: string) => {
+export const fetchTasks = async (type: string): Promise<TTaskWithUnits[]> => {
   const result = await supabase
     .from("tasks")
     .select(
       `
-      *,
-      transactions_summary(total_amount)
+      id,
+      createdAt:created_at,
+      title,
+      description,
+      creatorId:creator_id,
+      startDate:start_date,
+      endDate:end_date,
+      amount,
+      status,
+      type,
+      parentId:parent_id,
+      files,
+      measurementUnits:measurement_units (
+        title
+      )
     `,
     )
-    .eq("id", id);
+    .eq("type", type);
+
+  if (result.error) {
+    throw Error(`${result.error} ${result.statusText}`);
+  }
+
+  return result.data;
+};
+
+export const fetchTaskById = async (id: string): Promise<TTaskWithUnits> => {
+  const result = await supabase
+    .from("tasks")
+    .select(
+      `
+      id,
+      createdAt:created_at,
+      title,
+      description,
+      creatorId:creator_id,
+      startDate:start_date,
+      endDate:end_date,
+      amount,
+      status,
+      type,
+      parentId:parent_id,
+      files,
+      measurementUnits:measurement_units (
+        title
+      )
+    `,
+    )
+    .eq("id", id)
+    .limit(1)
+    .single();
 
   if (result.error) {
     throw Error(`${result.error} ${result.statusText}`);

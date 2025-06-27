@@ -1,28 +1,37 @@
 import { NavLink, Outlet, useLocation, useParams } from "react-router";
 import { Heading } from "../catalyst";
 import clsx from "clsx";
+import { useAppStore, type TAppStore } from "../../store";
 import { useEffect } from "react";
-import { getTaskById } from "../../api";
+import { Loader } from "../loader";
 
 const tabs = [
   { name: "Обзор", href: "", current: false },
-  { name: "План", href: "schedule", current: false },
-  { name: "Финансы", href: "finance", current: true },
+  // { name: "План", href: "schedule", current: false },
+  // { name: "Финансы", href: "finance", current: true },
   { name: "Документы", href: "document", current: false },
 ];
 
 export const ProjectLayout = () => {
-  const { pid } = useParams();
+  const { selectedTask, getTaskById } = useAppStore(
+    (s: TAppStore) => s.tasksStore,
+  );
+  const { id } = useParams();
   const location = useLocation();
-
   useEffect(() => {
-    const data = getTaskById(pid);
-  }, [pid]);
+    if (!selectedTask && id) {
+      getTaskById(id);
+    }
+  }, []);
+
+  if (!selectedTask) {
+    return <Loader />;
+  }
 
   return (
     <>
       <div className="flex w-full flex-wrap items-end justify-between gap-4 border-b border-zinc-950/10 pb-6 dark:border-white/10">
-        <Heading>Project: Current Project</Heading>
+        <Heading>Project: {selectedTask.title}</Heading>
       </div>
       <div className="my-4">
         <div className="grid grid-cols-1 sm:hidden">
@@ -41,7 +50,7 @@ export const ProjectLayout = () => {
           <div className="border-b border-gray-200">
             <nav aria-label="Tabs" className="-mb-px flex space-x-8">
               {tabs.map((tab) => {
-                const to = `/project/${pid}/${tab.href}`;
+                const to = `/project/${id}/${tab.href}`;
                 const isActive =
                   location.pathname === to ||
                   location.pathname === to.replace(/\/\.$/, "");
@@ -66,7 +75,7 @@ export const ProjectLayout = () => {
           </div>
         </div>
       </div>
-      <Outlet />
+      <Outlet context={{ task: selectedTask }} />
     </>
   );
 };

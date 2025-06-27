@@ -1,82 +1,33 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import EllipsisHorizontalIcon from "@heroicons/react/20/solid/EllipsisHorizontalIcon";
 import { Button, Heading } from "../catalyst";
 import clsx from "clsx";
-import { getTasks } from "../../api/tasks";
-
-// --- ваши текущие моки ---
-const clientsMock = [
-  {
-    id: 1,
-    name: "Project #1",
-    imageUrl: "https://tailwindcss.com/plus-assets/img/logos/48x48/tuple.svg",
-    lastInvoice: {
-      date: "December 13, 2024",
-      dateTime: "2024-12-13",
-      amount: "$2,000.00",
-      status: "Overdue",
-    },
-  },
-  {
-    id: 2,
-    name: "Project #2",
-    imageUrl:
-      "https://tailwindcss.com/plus-assets/img/logos/48x48/savvycal.svg",
-    lastInvoice: {
-      date: "January 22, 2025",
-      dateTime: "2025-01-22",
-      amount: "$14,000.00",
-      status: "Paid",
-    },
-  },
-  {
-    id: 3,
-    name: "Project #3",
-    imageUrl: "https://tailwindcss.com/plus-assets/img/logos/48x48/reform.svg",
-    lastInvoice: {
-      date: "January 23, 2025",
-      dateTime: "2025-01-23",
-      amount: "$7,600.00",
-      status: "Paid",
-    },
-  },
-];
+import { useAppStore, type TAppStore } from "../../store";
+import { useNavigate } from "react-router";
 
 const statuses = {
-  PENDING: "text-green-700 bg-green-50 ring-green-600/20",
-  IN_PROGRESS: "text-gray-600 bg-gray-50 ring-gray-500/10",
+  PENDING: "text-gray-600 bg-gray-50 ring-gray-500/10",
+  IN_PROGRESS: "text-green-700 bg-green-50 ring-green-600/20",
   REVIEW: "text-red-700 bg-red-50 ring-red-600/10",
-};
-type Status = keyof typeof statuses;
-
-// Тип для объединённых данных
-type ProjectCard = (typeof clientsMock)[number] & {
-  /* можно добавить поля из API, если нужно */
+  COMPLETED: "text-blue-700 bg-red-50 ring-red-600/10",
 };
 
 export const ProjectsList = () => {
-  const [projects, setProjects] = useState<ProjectCard[]>([]);
+  const { tasks, getTasks, resetTask, setTask } = useAppStore(
+    (s: TAppStore) => s.tasksStore,
+  );
+  const navigate = useNavigate();
 
   useEffect(() => {
-    getTasks().then((apiProjects) => {
-      // Привязываем моковые поля к первым трем проектам из API
-      const merged = apiProjects.map((proj, idx) => {
-        const mock = clientsMock[idx] || clientsMock[0];
-        return {
-          // берём id и title из API
-          id: proj.id,
-          name: proj.title,
-          // подставляем моковую картинку + статус
-          imageUrl: mock.imageUrl,
-          // lastInvoice: mock.lastInvoice,
-          // и все прочие поля из API, если понадобятся позже
-          ...proj,
-        };
-      });
-      setProjects(merged);
-    });
+    resetTask();
+    getTasks();
   }, []);
+
+  const toTask = (id: string): void => {
+    setTask(id);
+    navigate(`/project/${id}`);
+  };
 
   return (
     <>
@@ -86,19 +37,19 @@ export const ProjectsList = () => {
       </div>
 
       <ul className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 lg:grid-cols-3 xl:gap-x-8">
-        {projects.map((client) => (
+        {tasks.map((task) => (
           <li
-            key={client.id}
+            key={task.id}
             className="overflow-hidden rounded-xl border border-gray-200"
           >
             <div className="flex items-center gap-x-4 border-b border-gray-900/5 bg-gray-50 p-6">
-              <img
-                alt={client.name}
-                src={client.imageUrl}
+              {/* <img
+                alt={task.name}
+                src={task.imageUrl}
                 className="size-12 flex-none rounded-lg bg-white object-cover ring-1 ring-gray-900/10"
-              />
+              /> */}
               <div className="text-sm/6 font-medium text-gray-900">
-                {client.name}
+                {task.title}
               </div>
               <Menu as="div" className="relative ml-auto">
                 <MenuButton className="-m-2.5 block p-2.5 text-gray-400 hover:text-gray-500">
@@ -114,10 +65,10 @@ export const ProjectsList = () => {
                 >
                   <MenuItem>
                     <a
-                      href={`/project/${client.id}/`}
+                      onClick={() => toTask(task.id)}
                       className="block px-3 py-1 text-sm/6 text-gray-900 data-focus:bg-gray-50 data-focus:outline-hidden"
                     >
-                      View<span className="sr-only">, {client.name}</span>
+                      View<span className="sr-only">, {task.title}</span>
                     </a>
                   </MenuItem>
                 </MenuItems>
@@ -127,28 +78,29 @@ export const ProjectsList = () => {
               <div className="flex justify-between gap-x-4 py-3">
                 <dt className="text-gray-500">Start</dt>
                 <dd className="text-gray-700">
-                  <time dateTime={client.start_date}>{client.start_date}</time>
+                  <time dateTime={task.startDate}>{task.startDate}</time>
                 </dd>
               </div>
               <div className="flex justify-between gap-x-4 py-3">
                 <dt className="text-gray-500">End</dt>
                 <dd className="text-gray-700">
-                  <time dateTime={client.end_date}>{client.end_date}</time>
+                  <time dateTime={task.endDate}>{task.endDate}</time>
                 </dd>
               </div>
               <div className="flex justify-between gap-x-4 py-3">
                 <dt className="text-gray-500">Balance</dt>
                 <dd className="flex items-start gap-x-2">
                   <div className="font-medium text-gray-900">
-                    {client.transactions_summary[0].total_amount}
+                    {/* {task.transactions_summary[0].total_amount} */}
+                    100500
                   </div>
                   <div
                     className={clsx(
-                      statuses[client.status],
+                      statuses[task.status],
                       "rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset",
                     )}
                   >
-                    {client.status}
+                    {task.status}
                   </div>
                 </dd>
               </div>

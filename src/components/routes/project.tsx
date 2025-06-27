@@ -1,25 +1,39 @@
-import { DescriptionDetails, DescriptionList, DescriptionTerm } from '../catalyst'
+import { useOutletContext } from "react-router";
+import {
+  DescriptionDetails,
+  DescriptionList,
+  DescriptionTerm,
+} from "../catalyst";
+import type { TTaskWithUnits } from "../../api";
 
 export const Project = () => {
+  const { task } = useOutletContext<{ task: TTaskWithUnits }>();
+  // TODO: get task by id and save to store (if user reload page)
   return (
     <DescriptionList>
-      <DescriptionTerm>Customer</DescriptionTerm>
-      <DescriptionDetails>Michael Foster</DescriptionDetails>
+      <DescriptionTerm>Title</DescriptionTerm>
+      <DescriptionDetails>{task.title}</DescriptionDetails>
 
-      <DescriptionTerm>Event</DescriptionTerm>
-      <DescriptionDetails>Bear Hug: Live in Concert</DescriptionDetails>
+      <DescriptionTerm>Description</DescriptionTerm>
+      <DescriptionDetails>{task.description}</DescriptionDetails>
 
-      <DescriptionTerm>Amount</DescriptionTerm>
-      <DescriptionDetails>$150.00 USD</DescriptionDetails>
+      <DescriptionTerm>Start</DescriptionTerm>
+      <DescriptionDetails>{task.startDate}</DescriptionDetails>
 
-      <DescriptionTerm>Amount after exchange rate</DescriptionTerm>
-      <DescriptionDetails>US$150.00 &rarr; CA$199.79</DescriptionDetails>
+      <DescriptionTerm>End</DescriptionTerm>
+      <DescriptionDetails>{task.endDate}</DescriptionDetails>
 
-      <DescriptionTerm>Fee</DescriptionTerm>
-      <DescriptionDetails>$4.79 USD</DescriptionDetails>
+      {task.amount && (
+        <>
+          <DescriptionTerm>amount</DescriptionTerm>
+          <DescriptionDetails>
+            {task.amount} {task.measurementUnits.title}
+          </DescriptionDetails>
+        </>
+      )}
 
-      <DescriptionTerm>Net</DescriptionTerm>
-      <DescriptionDetails>$1,955.00</DescriptionDetails>
+      <DescriptionTerm>status</DescriptionTerm>
+      <DescriptionDetails>{task.status}</DescriptionDetails>
     </DescriptionList>
-  )
+  );
 };

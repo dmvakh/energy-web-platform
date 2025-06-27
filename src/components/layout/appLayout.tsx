@@ -13,11 +13,10 @@ export type User = {
 };
 
 interface AppLayoutProps {
-  user: User;
   children: ReactNode;
 }
 
-export const AppLayout = ({ user, children }: AppLayoutProps) => {
+export const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <SidebarLayout
       navbar={<NavBlock />}
@@ -25,7 +24,7 @@ export const AppLayout = ({ user, children }: AppLayoutProps) => {
         <Sidebar>
           <HeaderBlock />
           <BodyBlock />
-          <FooterBlock user={user} />
+          <FooterBlock />
         </Sidebar>
       }
     >
