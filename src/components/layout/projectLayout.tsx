@@ -10,6 +10,7 @@ const tabs = [
   // { name: "План", href: "schedule", current: false },
   // { name: "Финансы", href: "finance", current: true },
   { name: "Документы", href: "document", current: false },
+  { name: "Назначения", href: "assign", current: false },
 ];
 
 export const ProjectLayout = () => {

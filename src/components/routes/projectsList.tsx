@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import EllipsisHorizontalIcon from "@heroicons/react/20/solid/EllipsisHorizontalIcon";
-import { Button, Heading } from "../catalyst";
+import {
+  Button,
+  Heading,
+  DescriptionList,
+  DescriptionTerm,
+  DescriptionDetails,
+} from "../catalyst";
 import clsx from "clsx";
 import { useAppStore, type TAppStore } from "../../store";
 import { useNavigate } from "react-router";
@@ -18,7 +24,7 @@ const statuses: Record<TTaskStatus, string> = {
 };
 
 export const ProjectsList: React.FC = () => {
-  const { tasks, getTasks, resetTask, setTask } = useAppStore(
+  const { tasks, getTasks, resetTask, setTask, deleteTask } = useAppStore(
     (s: TAppStore) => s.tasksStore,
   );
   const navigate = useNavigate();
@@ -36,7 +42,7 @@ export const ProjectsList: React.FC = () => {
   };
 
   const role: TUserRoles =
-    user?.user_metadata?.profile?.role ?? UserRoles.WORKER;
+    user.user_metadata?.profile?.role ?? UserRoles.WORKER;
 
   const canCreate = role === UserRoles.ADMIN || role === UserRoles.MANAGER;
 
@@ -44,7 +50,6 @@ export const ProjectsList: React.FC = () => {
   const handleCancel = (): void => setShowForm(false);
 
   const handleSaveNew = async (data: Record<string, any>) => {
-    // snake_case fields expected
     await saveTask(data);
     await getTasks();
     setShowForm(false);
@@ -96,40 +101,53 @@ export const ProjectsList: React.FC = () => {
                         onClick={() => toTask(task.id)}
                         className="block w-full text-left px-3 py-1 text-sm/6 text-gray-900 hover:bg-gray-50 focus:outline-none"
                       >
-                        View<span className="sr-only">, {task.title}</span>
+                        View
+                      </button>
+                    </MenuItem>
+                    <MenuItem>
+                      <button
+                        onClick={() => {
+                          deleteTask(task.id);
+                        }}
+                        className="block w-full text-left px-3 py-1 text-sm/6 text-gray-900 hover:bg-gray-50 focus:outline-none"
+                      >
+                        Delete
                       </button>
                     </MenuItem>
                   </MenuItems>
                 </Menu>
               </div>
-              <dl className="-my-3 divide-y divide-gray-100 px-6 py-4 text-sm/6">
+
+              <DescriptionList className="divide-y divide-gray-100 px-6 py-4 text-sm/6">
                 <div className="flex justify-between gap-x-4 py-3">
-                  <dt className="text-gray-500">Start</dt>
-                  <dd className="text-gray-700">
+                  <DescriptionTerm>Start</DescriptionTerm>
+                  <DescriptionDetails>
                     <time dateTime={task.startDate}>{task.startDate}</time>
-                  </dd>
+                  </DescriptionDetails>
                 </div>
                 <div className="flex justify-between gap-x-4 py-3">
-                  <dt className="text-gray-500">End</dt>
-                  <dd className="text-gray-700">
+                  <DescriptionTerm>End</DescriptionTerm>
+                  <DescriptionDetails>
                     <time dateTime={task.endDate}>{task.endDate}</time>
-                  </dd>
+                  </DescriptionDetails>
                 </div>
                 <div className="flex justify-between gap-x-4 py-3">
-                  <dt className="text-gray-500">Balance</dt>
-                  <dd className="flex items-start gap-x-2">
-                    <div className="font-medium text-gray-900">100500</div>
-                    <div
-                      className={clsx(
-                        statuses[task.status],
-                        "rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset",
-                      )}
-                    >
-                      {task.status}
+                  <DescriptionTerm>Balance</DescriptionTerm>
+                  <DescriptionDetails>
+                    <div className="flex items-start gap-x-2">
+                      <div className="font-medium text-gray-900">100500</div>
+                      <div
+                        className={clsx(
+                          statuses[task.status],
+                          "rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset",
+                        )}
+                      >
+                        {task.status}
+                      </div>
                     </div>
-                  </dd>
+                  </DescriptionDetails>
                 </div>
-              </dl>
+              </DescriptionList>
             </li>
           ))}
         </ul>

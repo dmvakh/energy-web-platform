@@ -56,29 +56,35 @@ export const Project: React.FC = () => {
         />
       ) : (
         <DescriptionList>
-          <DescriptionTerm>Title</DescriptionTerm>
-          <DescriptionDetails>{task.title}</DescriptionDetails>
-
-          <DescriptionTerm>Description</DescriptionTerm>
-          <DescriptionDetails>{task.description}</DescriptionDetails>
-
-          <DescriptionTerm>Start</DescriptionTerm>
-          <DescriptionDetails>{task.startDate}</DescriptionDetails>
-
-          <DescriptionTerm>End</DescriptionTerm>
-          <DescriptionDetails>{task.endDate}</DescriptionDetails>
+          <div className="flex justify-between">
+            <DescriptionTerm>Title</DescriptionTerm>
+            <DescriptionDetails>{task.title}</DescriptionDetails>
+          </div>
+          <div className="flex justify-between">
+            <DescriptionTerm>Description</DescriptionTerm>
+            <DescriptionDetails>{task.description}</DescriptionDetails>
+          </div>
+          <div className="flex justify-between">
+            <DescriptionTerm>Start</DescriptionTerm>
+            <DescriptionDetails>{task.startDate}</DescriptionDetails>
+          </div>
+          <div className="flex justify-between">
+            <DescriptionTerm>End</DescriptionTerm>
+            <DescriptionDetails>{task.endDate}</DescriptionDetails>
+          </div>
 
           {task.amount && (
-            <>
+            <div className="flex justify-between">
               <DescriptionTerm>Amount</DescriptionTerm>
               <DescriptionDetails>
                 {task.amount} {task.measurementUnits.title}
               </DescriptionDetails>
-            </>
+            </div>
           )}
-
-          <DescriptionTerm>Status</DescriptionTerm>
-          <DescriptionDetails>{task.status}</DescriptionDetails>
+          <div className="flex justify-between">
+            <DescriptionTerm>Status</DescriptionTerm>
+            <DescriptionDetails>{task.status}</DescriptionDetails>
+          </div>
         </DescriptionList>
       )}
     </>

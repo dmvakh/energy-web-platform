@@ -1,8 +1,13 @@
 import { create } from "zustand";
 import type { TAppStore } from ".";
-import { fetchRawDocuments, fetchTaskById, fetchTasks } from "../api";
+import {
+  deleteTaskById,
+  fetchRawDocuments,
+  fetchTaskById,
+  fetchTasks,
+} from "../api";
 import { SYSTEM, LANG } from "../lang";
-import { fetchUnits } from "../api"; // импорт функции получения единиц
+import { fetchUnits } from "../api";
 
 export const useAppStore = create<TAppStore>((set, get) => {
   const updateGlobalLoading = () => {
@@ -95,6 +100,36 @@ export const useAppStore = create<TAppStore>((set, get) => {
             tasksStore: {
               ...state.tasksStore,
               unitsLoading: false,
+            },
+          }));
+        } finally {
+          updateGlobalLoading();
+        }
+      },
+
+      deleteTask: async (id: string): Promise<void> => {
+        set((state) => ({
+          tasksStore: { ...state.tasksStore, loading: true },
+        }));
+        updateGlobalLoading();
+
+        try {
+          const deletedId = await deleteTaskById(id);
+          set((state) => ({
+            tasksStore: {
+              ...state.tasksStore,
+              tasks: state.tasksStore.tasks.filter(
+                (it) => it.id !== deletedId.id,
+              ),
+            },
+          }));
+        } catch (error) {
+          console.error(SYSTEM.ERROR_DATA_LOADING[LANG], error);
+          set((state) => ({
+            tasksStore: {
+              ...state.tasksStore,
+              loading: false,
+              fetched: true,
             },
           }));
         } finally {

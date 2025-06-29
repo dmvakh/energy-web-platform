@@ -93,3 +93,56 @@ export const fetchUnits = async (): Promise<TMeasurementUnit[]> => {
   // data может быть null, приводим к пустому массиву
   return data ?? [];
 };
+
+export const deleteTaskById = async (
+  id: string,
+): Promise<Partial<TTaskWithUnits>> => {
+  const { data, error } = await supabase
+    .from("tasks")
+    .delete()
+    .eq("id", id)
+    .select(`id`)
+    .single();
+
+  if (error) {
+    throw new Error(`${error.name} (${error.details} ${error.message})`);
+  }
+
+  return data;
+};
+
+export const assignUserToTask = async (
+  taskId: string,
+  userId: string,
+  startDate: string,
+  endDate?: string,
+) => {
+  const records = [
+    {
+      task_id: taskId,
+      user_id: userId,
+      assigned_at: startDate,
+      status: "ACTIVE",
+    },
+  ];
+
+  if (endDate) {
+    records.push({
+      task_id: taskId,
+      user_id: userId,
+      assigned_at: endDate,
+      status: "REMOVED",
+    });
+  }
+
+  const { data, error } = await supabase
+    .from("task_assignment")
+    .insert(records)
+    .select("id, task_id, user_id, assigned_at, status");
+
+  if (error) {
+    throw new Error(`Ошибка назначения: ${error.message} (${error.code})`);
+  }
+
+  return data;
+};

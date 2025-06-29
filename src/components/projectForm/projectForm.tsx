@@ -10,12 +10,13 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   onCancel,
   saving,
 }) => {
-  // подтягиваем units и состояние загрузки
   const { units, unitsLoading, getUnits } = useAppStore((s) => s.tasksStore);
 
   useEffect(() => {
-    getUnits();
-  }, [getUnits]);
+    if (!units) {
+      getUnits();
+    }
+  }, [getUnits, units]);
 
   // маппинг полей из camelCase в snake_case
   const defaults = {

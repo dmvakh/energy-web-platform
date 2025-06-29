@@ -13,6 +13,7 @@ type TTasksSubStore = {
   getTasks: () => Promise<void>;
   getTaskById: (id: string) => Promise<void>;
   getUnits: () => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
 };
 
 type TDocumentsSubStore = {
