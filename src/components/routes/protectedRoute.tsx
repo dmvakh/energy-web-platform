@@ -9,13 +9,13 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isChecking, setIsChecking] = useState(true); // ⬅️ добавлено
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getUser();
       setIsAuthenticated(!!data?.user);
-      setIsChecking(false); // ⬅️ только после завершения
+      setIsChecking(false);
     };
 
     checkAuth();

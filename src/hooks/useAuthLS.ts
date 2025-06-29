@@ -23,21 +23,66 @@ export function useAuthUser(): User {
   const [user, setUser] = useState<User>(guestUser);
 
   useEffect(() => {
-    const initUser = async () => {
+    const loadUserWithProfile = async () => {
       const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Ошибка получения сессии:", error);
+
+      const sessionUser = data.session?.user;
+
+      if (error || !sessionUser) {
         setUser(guestUser);
+        return;
+      }
+
+      // получаем профиль
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", sessionUser.id)
+        .single();
+
+      if (profile && !profileError) {
+        // добавляем профиль в user_metadata
+        const fullUser = {
+          ...sessionUser,
+          user_metadata: {
+            ...sessionUser.user_metadata,
+            profile, // будет доступен как user.user_metadata.profile
+          },
+        };
+        setUser(fullUser);
       } else {
-        setUser(data.session?.user ?? guestUser);
+        setUser(sessionUser);
       }
     };
 
-    initUser();
+    loadUserWithProfile();
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? guestUser);
+      async (_event, session) => {
+        const sessionUser = session?.user;
+
+        if (!sessionUser) {
+          setUser(guestUser);
+          return;
+        }
+
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", sessionUser.id)
+          .single();
+
+        if (profile && !error) {
+          setUser({
+            ...sessionUser,
+            user_metadata: {
+              ...sessionUser.user_metadata,
+              profile,
+            },
+          });
+        } else {
+          setUser(sessionUser);
+        }
       },
     );
 

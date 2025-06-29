@@ -2,14 +2,15 @@ import { create } from "zustand";
 import type { TAppStore } from ".";
 import { fetchRawDocuments, fetchTaskById, fetchTasks } from "../api";
 import { SYSTEM, LANG } from "../lang";
+import { fetchUnits } from "../api"; // импорт функции получения единиц
 
 export const useAppStore = create<TAppStore>((set, get) => {
   const updateGlobalLoading = () => {
     const {
-      tasksStore: { loading: tasksLoading },
+      tasksStore: { loading: tasksLoading, unitsLoading },
       documentsStore: { loading: documentsLoading },
     } = get();
-    const anyLoading = tasksLoading || documentsLoading;
+    const anyLoading = tasksLoading || unitsLoading || documentsLoading;
 
     set({ globalLoading: anyLoading });
   };
@@ -19,7 +20,9 @@ export const useAppStore = create<TAppStore>((set, get) => {
 
     tasksStore: {
       tasks: [],
+      units: [],
       loading: false,
+      unitsLoading: false,
       fetched: false,
       selectedTask: null,
       setTask: (id) => {
@@ -40,6 +43,7 @@ export const useAppStore = create<TAppStore>((set, get) => {
           },
         }));
       },
+
       getTasks: async (): Promise<void> => {
         set((state) => ({
           tasksStore: { ...state.tasksStore, loading: true },
@@ -69,6 +73,35 @@ export const useAppStore = create<TAppStore>((set, get) => {
           updateGlobalLoading();
         }
       },
+
+      getUnits: async (): Promise<void> => {
+        set((state) => ({
+          tasksStore: { ...state.tasksStore, unitsLoading: true },
+        }));
+        updateGlobalLoading();
+
+        try {
+          const data = await fetchUnits();
+          set((state) => ({
+            tasksStore: {
+              ...state.tasksStore,
+              units: data,
+              unitsLoading: false,
+            },
+          }));
+        } catch (error) {
+          console.error(SYSTEM.ERROR_DATA_LOADING[LANG], error);
+          set((state: TAppStore) => ({
+            tasksStore: {
+              ...state.tasksStore,
+              unitsLoading: false,
+            },
+          }));
+        } finally {
+          updateGlobalLoading();
+        }
+      },
+
       getTaskById: async (id: string): Promise<void> => {
         set((state) => ({
           tasksStore: { ...state.tasksStore, loading: true },
@@ -114,17 +147,20 @@ export const useAppStore = create<TAppStore>((set, get) => {
         }
       },
     },
+
     documentsStore: {
       loading: false,
       fetched: false,
       documents: {
-        tasks: [],
+        tasks: {},
         personal: [],
       },
       getTaskDocuments: async (taskId: string): Promise<void> => {
         set((state) => ({
           documentsStore: { ...state.documentsStore, loading: true },
         }));
+        updateGlobalLoading();
+
         try {
           const taskDocuments = await fetchRawDocuments(`tasks/${taskId}`);
           set((state) => ({
