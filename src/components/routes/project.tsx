@@ -10,13 +10,14 @@ import {
   DescriptionList,
   DescriptionTerm,
 } from "../catalyst";
-import { useAuthUser } from "../../hooks";
 import { ProjectForm } from "../projectForm";
 
 export const Project: React.FC = () => {
-  const { task } = useOutletContext<{ task: TTaskWithUnits }>();
-  const user = useAuthUser();
-  const isAuthor = user.id === task.creatorId;
+  const { task, isAuthor } = useOutletContext<{
+    task: TTaskWithUnits;
+    isAuthor: boolean;
+  }>();
+
   const getTaskById = useAppStore((s) => s.tasksStore.getTaskById);
 
   const [editing, setEditing] = useState(false);
@@ -90,42 +91,3 @@ export const Project: React.FC = () => {
     </>
   );
 };
-
-// import { useOutletContext } from "react-router";
-// import {
-//   DescriptionDetails,
-//   DescriptionList,
-//   DescriptionTerm,
-// } from "../catalyst";
-// import type { TTaskWithUnits } from "../../api";
-
-// export const Project = () => {
-//   const { task } = useOutletContext<{ task: TTaskWithUnits }>();
-//   return (
-//     <DescriptionList>
-//       <DescriptionTerm>Title</DescriptionTerm>
-//       <DescriptionDetails>{task.title}</DescriptionDetails>
-
-//       <DescriptionTerm>Description</DescriptionTerm>
-//       <DescriptionDetails>{task.description}</DescriptionDetails>
-
-//       <DescriptionTerm>Start</DescriptionTerm>
-//       <DescriptionDetails>{task.startDate}</DescriptionDetails>
-
-//       <DescriptionTerm>End</DescriptionTerm>
-//       <DescriptionDetails>{task.endDate}</DescriptionDetails>
-
-//       {task.amount && (
-//         <>
-//           <DescriptionTerm>amount</DescriptionTerm>
-//           <DescriptionDetails>
-//             {task.amount} {task.measurementUnits.title}
-//           </DescriptionDetails>
-//         </>
-//       )}
-
-//       <DescriptionTerm>status</DescriptionTerm>
-//       <DescriptionDetails>{task.status}</DescriptionDetails>
-//     </DescriptionList>
-//   );
-// };

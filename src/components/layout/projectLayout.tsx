@@ -4,6 +4,8 @@ import clsx from "clsx";
 import { useAppStore, type TAppStore } from "../../store";
 import { useEffect } from "react";
 import { Loader } from "../loader";
+import { useAuthUser } from "../../hooks";
+import type { User } from "@supabase/supabase-js";
 
 const tabs = [
   { name: "Обзор", href: "", current: false },
@@ -19,6 +21,8 @@ export const ProjectLayout = () => {
   );
   const { id } = useParams();
   const location = useLocation();
+  const user: User = useAuthUser();
+  const isAuthor = user && selectedTask && user?.id === selectedTask?.creatorId;
   useEffect(() => {
     if (!selectedTask && id) {
       getTaskById(id);
@@ -76,7 +80,7 @@ export const ProjectLayout = () => {
           </div>
         </div>
       </div>
-      <Outlet context={{ task: selectedTask }} />
+      <Outlet context={{ task: selectedTask, user, isAuthor }} />
     </>
   );
 };

@@ -12,6 +12,7 @@ import { Login } from "./components/routes/login";
 
 import "wx-react-gantt/dist/gantt.css";
 import { ProtectedRoute } from "./components/routes/protectedRoute";
+import { AssignmentSection } from "./components/routes/projectAssignment";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
             <Route path=":id/schedule" element={<Schedule />} />
             <Route path=":id/finance" element={<Finance />} />
             <Route path=":id/document" element={<Document />} />
+            <Route path=":id/assign" element={<AssignmentSection />} />
           </Route>
         </Route>
       </Route>

@@ -1,7 +1,12 @@
 // src/api/index.ts
 
-import { supabase } from ".";
-import type { TTaskWithUnits, TMeasurementUnit } from ".";
+import { AssignmentStatus, supabase } from ".";
+import type {
+  TTaskWithUnits,
+  TMeasurementUnit,
+  TAssignmentStatus,
+  TAssignment,
+} from ".";
 
 export const fetchTasks = async (type: string): Promise<TTaskWithUnits[]> => {
   const result = await supabase
@@ -26,7 +31,8 @@ export const fetchTasks = async (type: string): Promise<TTaskWithUnits[]> => {
       )
     `,
     )
-    .eq("type", type);
+    .eq("type", type)
+    .overrideTypes<TTaskWithUnits[]>();
 
   if (result.error) {
     throw new Error(`${result.error.message} (${result.status})`);
@@ -60,7 +66,8 @@ export const fetchTaskById = async (id: string): Promise<TTaskWithUnits> => {
     )
     .eq("id", id)
     .limit(1)
-    .single();
+    .single()
+    .overrideTypes<TTaskWithUnits>();
 
   if (result.error) {
     throw new Error(`${result.error.message} (${result.status})`);
@@ -84,13 +91,13 @@ export const saveTask = async (data: object, projectId?: string) => {
 export const fetchUnits = async (): Promise<TMeasurementUnit[]> => {
   const { data, error } = await supabase
     .from("measurement_units")
-    .select("id, title");
+    .select("id, title")
+    .overrideTypes<TMeasurementUnit[]>();
 
   if (error) {
     throw new Error(`${error.name} (${error.message} / ${error.details})`);
   }
 
-  // data может быть null, приводим к пустому массиву
   return data ?? [];
 };
 
@@ -102,7 +109,8 @@ export const deleteTaskById = async (
     .delete()
     .eq("id", id)
     .select(`id`)
-    .single();
+    .single()
+    .overrideTypes<TTaskWithUnits>();
 
   if (error) {
     throw new Error(`${error.name} (${error.details} ${error.message})`);
@@ -111,38 +119,115 @@ export const deleteTaskById = async (
   return data;
 };
 
-export const assignUserToTask = async (
+export const saveAssignment = async (
   taskId: string,
   userId: string,
   startDate: string,
   endDate?: string,
-) => {
-  const records = [
-    {
-      task_id: taskId,
-      user_id: userId,
-      assigned_at: startDate,
-      status: "ACTIVE",
-    },
-  ];
+): Promise<TAssignment> => {
+  const records: Array<{
+    task_id: string;
+    user_id: string;
+    status: TAssignmentStatus;
+    assigned_at: string;
+  }> = [];
+
+  records.push({
+    task_id: taskId,
+    user_id: userId,
+    status: AssignmentStatus.ACTIVE,
+    assigned_at: startDate,
+  });
 
   if (endDate) {
     records.push({
       task_id: taskId,
       user_id: userId,
+      status: AssignmentStatus.REMOVED,
       assigned_at: endDate,
-      status: "REMOVED",
     });
   }
 
   const { data, error } = await supabase
     .from("task_assignment")
     .insert(records)
-    .select("id, task_id, user_id, assigned_at, status");
+    .select(
+      `
+      id,
+      userId:user_id,
+      taskId:task_id,
+      status,
+      assignedAt:assigned_at
+    `,
+    )
+    .overrideTypes<
+      {
+        id: string;
+        userId: string;
+        taskId: string;
+        status: TAssignmentStatus;
+        assignedAt: string;
+      }[]
+    >();
 
   if (error) {
-    throw new Error(`Ошибка назначения: ${error.message} (${error.code})`);
+    throw new Error(
+      `saveAssignment error: ${error.name} (${error.message} ${error.details})`,
+    );
   }
 
+  const result: TAssignment = {
+    ...data[0],
+    startDate: data[0].assignedAt,
+    endDate: data?.[1].assignedAt ?? null,
+  };
+
+  return result;
+};
+
+export const fetchAssignments = async (
+  taskId: string,
+): Promise<TAssignment[]> => {
+  const { data, error } = await supabase
+    .from("task_assignment_intervals")
+    .select(
+      `
+      taskId:task_id,
+      taskTitle:task_title,
+      userId:user_id,
+      userEmail:user_email,
+      startDate:start_date,
+      endDate:end_date
+      `,
+    )
+    .eq("task_id", taskId)
+    .order("user_id", { ascending: true })
+    .order("start_date", { ascending: true })
+    .overrideTypes<TAssignment[]>();
+
+  if (error) {
+    throw new Error(
+      `fetchAssignments error: ${error.name} (${error.message} ${error.details})`,
+    );
+  }
+  return data;
+};
+
+export const deleteAssignment = async (
+  assignmentId: string,
+): Promise<{ id: string; taskId: string }> => {
+  const { data, error } = await supabase
+    .from("task_assignment")
+    .delete()
+    .eq("id", assignmentId)
+    .select("id, taskId:task_id")
+    .single()
+    .overrideTypes<{ id: string; taskId: string }>();
+
+  if (error) {
+    throw new Error(
+      `deleteAssignment error: ${error.name} (${error.message} ${error.details})`,
+    );
+  }
   return data;
 };

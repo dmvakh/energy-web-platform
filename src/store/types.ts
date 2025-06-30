@@ -1,5 +1,5 @@
 import type { FileObject } from "@supabase/storage-js";
-import type { TTaskWithUnits, TMeasurementUnit } from "../api";
+import type { TTaskWithUnits, TMeasurementUnit, TAssignment } from "../api";
 
 type TTasksSubStore = {
   tasks: TTaskWithUnits[];
@@ -28,8 +28,22 @@ type TDocumentsSubStore = {
   getTaskDocuments: (path: string) => Promise<void>;
 };
 
+export type TAssignmentsSubStore = {
+  assignments: Record<string, TAssignment[]>;
+  loading: boolean;
+  getAssignments: (taskId: string) => Promise<void>;
+  createAssignment: (
+    taskId: string,
+    userId: string,
+    startDate: string,
+    endDate?: string,
+  ) => Promise<void>;
+  deleteAssignment: (taskId: string, assignmentId: string) => Promise<void>;
+};
+
 export type TAppStore = {
   tasksStore: TTasksSubStore;
   documentsStore: TDocumentsSubStore;
+  assignmentsStore: TAssignmentsSubStore;
   globalLoading: boolean;
 };

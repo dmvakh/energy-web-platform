@@ -3,7 +3,7 @@ export const TaskStatus = {
   IN_PROGRESS: "IN_PROGRESS",
   REVIEW: "REVIEW",
   COMPLETED: "COMPLETED",
-} as const;
+};
 
 export const TaskType = {
   TASK: "TASK",
@@ -43,3 +43,21 @@ export const UserRoles = {
 } as const;
 
 export type TUserRoles = (typeof UserRoles)[keyof typeof UserRoles];
+
+export type TAssignment = {
+  id: string;
+  userId: string;
+  taskId: string;
+  startDate: string;
+  endDate: string | null;
+  taskTitle?: string;
+  userEmail?: string;
+};
+
+export const AssignmentStatus = {
+  ACTIVE: "ACTIVE",
+  REMOVED: "REMOVED",
+};
+
+export type TAssignmentStatus =
+  (typeof AssignmentStatus)[keyof typeof AssignmentStatus];
