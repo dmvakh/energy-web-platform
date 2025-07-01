@@ -10,7 +10,7 @@ import {
   DescriptionList,
   DescriptionTerm,
 } from "../catalyst";
-import { ProjectForm } from "../projectForm";
+import { ProjectForm, type TTaskFormDefaults } from "../projectForm";
 
 export const Project: React.FC = () => {
   const { task, isAuthor } = useOutletContext<{
@@ -23,7 +23,10 @@ export const Project: React.FC = () => {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const handleSave = async (data: Record<string, any>) => {
+  const handleSave = async (data: TTaskFormDefaults) => {
+    if (!task.id) {
+      throw new Error("Incorrect task id");
+    }
     setSaving(true);
     try {
       await saveTask(data, task.id);

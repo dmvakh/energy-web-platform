@@ -77,14 +77,16 @@ export const Document = () => {
     if (error) {
       console.error("Ошибка удаления файла:", error.message);
     } else {
-      await getTaskDocuments(task.id);
+      if (task?.id) {
+        await getTaskDocuments(task.id);
+      }
     }
 
     setDeleting(false);
     setDeletingFile(null);
   };
 
-  if (!task) {
+  if (!task || !task?.id) {
     return <Loader />;
   }
 

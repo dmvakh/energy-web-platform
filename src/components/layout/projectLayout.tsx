@@ -27,7 +27,7 @@ export const ProjectLayout = () => {
     if (!selectedTask && id) {
       getTaskById(id);
     }
-  }, []);
+  }, [selectedTask, getTaskById, id]);
 
   if (!selectedTask) {
     return <Loader />;

@@ -20,7 +20,7 @@ export type TTaskType = (typeof TaskType)[keyof typeof TaskType];
 // export type TTaskStatus = "PENDING" | "IN_PROGRESS" | "REVIEW" | "COMPLETED";
 // export type TTaskType = "TASK" | "PROJECT";
 export type TTaskWithUnits = {
-  id?: string;
+  id: string;
   createdAt: string;
   title: string;
   description: string;

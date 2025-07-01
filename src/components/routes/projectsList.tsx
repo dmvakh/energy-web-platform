@@ -12,7 +12,7 @@ import clsx from "clsx";
 import { useAppStore, type TAppStore } from "../../store";
 import { useNavigate } from "react-router";
 import { useAuthUser } from "../../hooks";
-import { ProjectForm } from "../projectForm";
+import { ProjectForm, type TTaskFormDefaults } from "../projectForm";
 import { saveTask, UserRoles } from "../../api";
 import type { TTaskStatus, TUserRoles } from "../../api";
 
@@ -57,7 +57,7 @@ export const ProjectsList: React.FC = () => {
   const handleCreate = (): void => setShowForm(true);
   const handleCancel = (): void => setShowForm(false);
 
-  const handleSaveNew = async (data: Record<string, any>) => {
+  const handleSaveNew = async (data: TTaskFormDefaults) => {
     await saveTask(data);
     await getTasks();
     setShowForm(false);

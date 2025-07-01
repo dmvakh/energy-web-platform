@@ -75,8 +75,8 @@ export const TaskAssignment: React.FC = () => {
     await deleteAssignment(assignmentId);
   };
 
+  if (loading || !taskId) return <Loader />;
   const current: TAssignment[] = assignments[taskId] ?? [];
-  if (loading) return <Loader />;
 
   return (
     <section className="mt-8 space-y-4">
@@ -96,9 +96,7 @@ export const TaskAssignment: React.FC = () => {
               {a.endDate ? ` → ${formatDate(a.endDate)}` : ""}
             </span>
             {isAuthor && (
-              <Button size="sm" onClick={() => onDelete(a.assignmentId)}>
-                Delete
-              </Button>
+              <Button onClick={() => onDelete(a.assignmentId)}>Delete</Button>
             )}
           </li>
         ))}
