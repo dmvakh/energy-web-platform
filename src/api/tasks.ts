@@ -128,7 +128,7 @@ export const saveAssignment = async (
   userId: string,
   startDate: string,
   endDate?: string,
-): Promise<TAssignment> => {
+): Promise<void> => {
   const records: Array<{
     task_id: string;
     user_id: string;
@@ -152,41 +152,13 @@ export const saveAssignment = async (
     });
   }
 
-  const { data, error } = await supabase
-    .from("task_assignment")
-    .insert(records)
-    .select(
-      `
-      id,
-      userId:user_id,
-      taskId:task_id,
-      status,
-      assignedAt:assigned_at
-    `,
-    )
-    .overrideTypes<
-      {
-        id: string;
-        userId: string;
-        taskId: string;
-        status: TAssignmentStatus;
-        assignedAt: string;
-      }[]
-    >();
+  const { error } = await supabase.from("task_assignment").insert(records);
 
   if (error) {
     throw new Error(
       `saveAssignment error: ${error.name} (${error.message} ${error.details})`,
     );
   }
-
-  const result: TAssignment = {
-    ...data[0],
-    startDate: data[0].assignedAt,
-    endDate: data?.[1].assignedAt ?? null,
-  };
-
-  return result;
 };
 
 export const fetchAssignments = async (
