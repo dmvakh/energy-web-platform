@@ -24,17 +24,25 @@ const statuses: Record<TTaskStatus, string> = {
 };
 
 export const ProjectsList: React.FC = () => {
-  const { tasks, getTasks, resetTask, setTask, deleteTask } = useAppStore(
-    (s: TAppStore) => s.tasksStore,
-  );
+  const { tasks, getTasks, resetTask, setTask, deleteTask, units, getUnits } =
+    useAppStore((s: TAppStore) => s.tasksStore);
+
   const navigate = useNavigate();
   const user = useAuthUser();
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     resetTask();
-    getTasks();
-  }, [resetTask, getTasks]);
+    if (!tasks.length) {
+      getTasks();
+    }
+  }, [resetTask, getTasks, tasks.length]);
+
+  useEffect(() => {
+    if (!units.length) {
+      getUnits();
+    }
+  }, [units.length, getUnits]);
 
   const toTask = (id: string): void => {
     setTask(id);

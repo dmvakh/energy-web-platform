@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "../catalyst";
-import type { ProjectFormProps } from "./types";
+import type { ProjectFormProps, TTaskFormDefaults } from ".";
 import { useAppStore } from "../../store";
 import { TaskStatus, TaskType } from "../../api";
+import { dateToInputFormat } from "../../utils";
 
 export const ProjectForm: React.FC<ProjectFormProps> = ({
   initialData,
@@ -10,27 +11,22 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   onCancel,
   saving,
 }) => {
-  const { units, unitsLoading, getUnits } = useAppStore((s) => s.tasksStore);
-
-  useEffect(() => {
-    if (!units) {
-      getUnits();
-    }
-  }, [getUnits, units]);
-
-  // маппинг полей из camelCase в snake_case
-  const defaults = {
-    id: initialData?.id ?? "",
+  const { units, unitsLoading } = useAppStore((s) => s.tasksStore);
+  const defaults: TTaskFormDefaults = {
     title: initialData?.title ?? "",
     description: initialData?.description ?? "",
-    start_date: initialData?.startDate ?? "",
+    start_date: initialData?.startDate ?? dateToInputFormat(),
     end_date: initialData?.endDate ?? "",
     amount: initialData?.amount ?? 0,
     status: initialData?.status ?? TaskStatus.PENDING,
     type: initialData?.type ?? TaskType.PROJECT,
     parent_id: initialData?.parentId ?? null,
-    units_id: initialData?.measurementUnits?.id ?? "", // если редактируем, будет выбранное
+    units_id: initialData?.measurementUnits?.id ?? "",
   };
+
+  if (initialData?.id) {
+    defaults.id = initialData.id;
+  }
 
   const [formValues, setFormValues] = useState(defaults);
   const isNew = !formValues.id;

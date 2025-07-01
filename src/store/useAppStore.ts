@@ -66,12 +66,11 @@ export const useAppStore = create<TAppStore>((set, get) => {
             tasksStore: {
               ...state.tasksStore,
               tasks: data,
-              loading: false,
-              fetched: true,
             },
           }));
         } catch (error) {
           console.error(SYSTEM.ERROR_DATA_LOADING[LANG], error);
+        } finally {
           set((state: TAppStore) => ({
             tasksStore: {
               ...state.tasksStore,
@@ -79,7 +78,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
               fetched: true,
             },
           }));
-        } finally {
           updateGlobalLoading();
         }
       },
@@ -96,18 +94,17 @@ export const useAppStore = create<TAppStore>((set, get) => {
             tasksStore: {
               ...state.tasksStore,
               units: data,
-              unitsLoading: false,
             },
           }));
         } catch (error) {
           console.error(SYSTEM.ERROR_DATA_LOADING[LANG], error);
+        } finally {
           set((state: TAppStore) => ({
             tasksStore: {
               ...state.tasksStore,
               unitsLoading: false,
             },
           }));
-        } finally {
           updateGlobalLoading();
         }
       },
@@ -130,6 +127,7 @@ export const useAppStore = create<TAppStore>((set, get) => {
           }));
         } catch (error) {
           console.error(SYSTEM.ERROR_DATA_LOADING[LANG], error);
+        } finally {
           set((state) => ({
             tasksStore: {
               ...state.tasksStore,
@@ -137,7 +135,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
               fetched: true,
             },
           }));
-        } finally {
           updateGlobalLoading();
         }
       },
@@ -168,13 +165,12 @@ export const useAppStore = create<TAppStore>((set, get) => {
                 ...state.tasksStore,
                 tasks: updatedTasks,
                 selectedTask: task,
-                loading: false,
-                fetched: true,
               },
             };
           });
         } catch (error) {
           console.error(SYSTEM.ERROR_DATA_LOADING[LANG], error);
+        } finally {
           set((state) => ({
             tasksStore: {
               ...state.tasksStore,
@@ -182,7 +178,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
               fetched: true,
             },
           }));
-        } finally {
           updateGlobalLoading();
         }
       },
@@ -214,12 +209,11 @@ export const useAppStore = create<TAppStore>((set, get) => {
                   ),
                 },
               },
-              loading: false,
-              fetched: true,
             },
           }));
         } catch (error) {
           console.error(SYSTEM.ERROR_DATA_LOADING[LANG], error);
+        } finally {
           set((state) => ({
             documentsStore: {
               ...state.documentsStore,
@@ -227,7 +221,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
               fetched: true,
             },
           }));
-        } finally {
           updateGlobalLoading();
         }
       },
@@ -249,15 +242,14 @@ export const useAppStore = create<TAppStore>((set, get) => {
                 ...s.assignmentsStore.assignments,
                 [taskId]: list,
               },
-              loading: false,
             },
           }));
         } catch (e) {
           console.error(SYSTEM.ERROR_DATA_LOADING[LANG], e);
+        } finally {
           set((s) => ({
             assignmentsStore: { ...s.assignmentsStore, loading: false },
           }));
-        } finally {
           updateGlobalLoading();
         }
       },
@@ -293,7 +285,7 @@ export const useAppStore = create<TAppStore>((set, get) => {
                 ...s.assignmentsStore.assignments,
                 [deleted.taskId]: s.assignmentsStore.assignments[
                   deleted.taskId
-                ].filter((a) => a.id !== assignmentId),
+                ].filter((a) => a.assignmentId !== assignmentId),
               },
             },
           }));

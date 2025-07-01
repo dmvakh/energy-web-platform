@@ -27,7 +27,9 @@ export const Document = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    getTaskDocuments(task.id);
+    if (task.id) {
+      getTaskDocuments(task.id);
+    }
   }, [getTaskDocuments, task.id]);
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,13 +43,15 @@ export const Document = () => {
       const result = await supabase.storage.from("files").upload(path, file, {
         upsert: true,
       });
-
+      console.log("path", path);
       if (result.error) {
         console.error(
           "Ошибка загрузки файла:",
           result.error.name,
           result.error.message,
+          result.error.stack,
         );
+        console.error();
       }
     }
 
@@ -80,14 +84,14 @@ export const Document = () => {
     setDeletingFile(null);
   };
 
-  if (!task || !tasksDocuments?.[task.id]) {
+  if (!task) {
     return <Loader />;
   }
 
   return (
     <article className="space-y-4">
       <ul className="space-y-2">
-        {tasksDocuments[task.id].map((doc) => (
+        {tasksDocuments?.[task.id]?.map((doc) => (
           <li key={doc.id} className="flex items-center gap-2">
             <span>{doc.name}</span>
             <Button
@@ -97,7 +101,6 @@ export const Document = () => {
               <ArrowDownTrayIcon className="w-5 h-5 text-gray-500" />
             </Button>
             <Button
-              variant="ghost"
               className="cursor-pointer ml-1"
               onClick={() => confirmDelete(doc.name)}
             >

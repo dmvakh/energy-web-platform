@@ -77,15 +77,19 @@ export const fetchTaskById = async (id: string): Promise<TTaskWithUnits> => {
 
 export const saveTask = async (data: object, projectId?: string) => {
   let result;
-  if (projectId) {
-    result = await supabase.from("tasks").update(data).eq("id", projectId);
-  } else {
-    result = await supabase.from("tasks").insert(data);
+  try {
+    if (projectId) {
+      result = await supabase.from("tasks").update(data).eq("id", projectId);
+    } else {
+      result = await supabase.from("tasks").insert(data).select("*");
+    }
+    console.log("result", result);
+    if (result.error) {
+      throw new Error(`${result.error.message} (${result.status})`);
+    }
+  } catch (err) {
+    console.error(err);
   }
-  if (result.error) {
-    throw new Error(`${result.error.message} (${result.status})`);
-  }
-  return result.data;
 };
 
 export const fetchUnits = async (): Promise<TMeasurementUnit[]> => {
@@ -192,10 +196,16 @@ export const fetchAssignments = async (
     .from("task_assignment_intervals")
     .select(
       `
+      assignmentId:assignment_id,
       taskId:task_id,
       taskTitle:task_title,
       userId:user_id,
+      userFirstName:user_first_name,
+      userLastName:user_last_name,
       userEmail:user_email,
+      creatorFirstName:creator_first_name,
+      creatorLastName:creator_last_name,
+      creatorEmail:creator_email,
       startDate:start_date,
       endDate:end_date
       `,

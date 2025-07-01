@@ -20,7 +20,7 @@ export type TTaskType = (typeof TaskType)[keyof typeof TaskType];
 // export type TTaskStatus = "PENDING" | "IN_PROGRESS" | "REVIEW" | "COMPLETED";
 // export type TTaskType = "TASK" | "PROJECT";
 export type TTaskWithUnits = {
-  id: string;
+  id?: string;
   createdAt: string;
   title: string;
   description: string;
@@ -45,13 +45,18 @@ export const UserRoles = {
 export type TUserRoles = (typeof UserRoles)[keyof typeof UserRoles];
 
 export type TAssignment = {
-  id: string;
-  userId: string;
+  assignmentId: string;
   taskId: string;
+  taskTitle: string;
+  userId: string;
+  userFirstName: string;
+  userLastName: string;
+  userEmail: string;
+  creatorFirstName: string;
+  creatorLastName: string;
+  creatorEmail: string;
   startDate: string;
-  endDate: string | null;
-  taskTitle?: string;
-  userEmail?: string;
+  endDate: string;
 };
 
 export const AssignmentStatus = {
@@ -61,3 +66,10 @@ export const AssignmentStatus = {
 
 export type TAssignmentStatus =
   (typeof AssignmentStatus)[keyof typeof AssignmentStatus];
+
+export type TUserProfile = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+};
