@@ -1,6 +1,6 @@
-import { Route, Routes } from "react-router";
+import { Route, Routes, Outlet } from "react-router";
 import "./App.css";
-import { AppLayout, type User } from "./components/layout/appLayout";
+import { AppLayout } from "./components/layout/appLayout";
 import { Dashboard } from "./components/routes/dashboard";
 import { ProjectsList } from "./components/routes/projectsList";
 import { Project } from "./components/routes/project";
@@ -8,28 +8,38 @@ import { ProjectLayout } from "./components/layout/projectLayout";
 import { Schedule } from "./components/routes/schedule";
 import { Finance } from "./components/routes/finance";
 import { Document } from "./components/routes/document";
+import { Login } from "./components/routes/login";
 
 import "wx-react-gantt/dist/gantt.css";
+import { ProtectedRoute } from "./components/routes/protectedRoute";
+import { TaskAssignment } from "./components/routes/projectAssignment";
 
 function App() {
-  const user = { id: "1", email: "test@user.mail" };
-
   return (
-    <AppLayout user={user as User}>
-      <Routes>
-        <Route path='/' element={<Dashboard />} />
-        <Route path='/project'>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <Outlet />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="project">
           <Route index element={<ProjectsList />} />
           <Route element={<ProjectLayout />}>
-            <Route path=':pid' element={<Project />} />
-            <Route path=':pid/schedule' element={<Schedule />} />
-            <Route path=':pid/finance' element={<Finance />} />
-            <Route path=':pid/document' element={<Document />} />
+            <Route path=":id" element={<Project />} />
+            <Route path=":id/schedule" element={<Schedule />} />
+            <Route path=":id/finance" element={<Finance />} />
+            <Route path=":id/document" element={<Document />} />
+            <Route path=":id/assign" element={<TaskAssignment />} />
           </Route>
         </Route>
-      </Routes>
-    </AppLayout>
+      </Route>
+    </Routes>
   );
 }
-
 export default App;
