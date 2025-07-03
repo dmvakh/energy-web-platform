@@ -49,7 +49,7 @@ export const TaskAssignment: React.FC = () => {
 
       // expires_at — Unix-время (секунды), когда токен перестанет быть валидным
       // конвертируем в миллисекунды и в объект Date
-      const expiresAtMs = session.expires_at * 1000;
+      const expiresAtMs = (session?.expires_at || 0) * 1000;
       const expiresAtDate = new Date(expiresAtMs);
 
       // 3. Выводим информацию
