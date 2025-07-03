@@ -5,7 +5,7 @@ import { Loader } from "../loader";
 import { useOutletContext } from "react-router";
 import type { TTaskWithUnits, TAssignment, TUserProfile } from "../../api";
 import type { User } from "@supabase/supabase-js";
-import { fetchUsersByEmail } from "../../api";
+import { fetchUsersByEmail, supabase } from "../../api";
 
 export const TaskAssignment: React.FC = () => {
   const { task, isAuthor } = useOutletContext<{
@@ -27,6 +27,54 @@ export const TaskAssignment: React.FC = () => {
   const [suggestions, setSuggestions] = useState<TUserProfile[]>([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  useEffect(() => {
+    const getSess = async () => {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Ошибка при получении сессии:", error.message);
+        return;
+      }
+      if (!session) {
+        console.log("Нет активной сессии");
+        return;
+      }
+
+      // 2. Разбираем поля
+      // expires_in — число секунд до истечения
+      const expiresInSec = session.expires_in; // например, 3600
+
+      // expires_at — Unix-время (секунды), когда токен перестанет быть валидным
+      // конвертируем в миллисекунды и в объект Date
+      const expiresAtMs = session.expires_at * 1000;
+      const expiresAtDate = new Date(expiresAtMs);
+
+      // 3. Выводим информацию
+      console.log(`Сессия истекает через: ${expiresInSec} сек.`);
+      console.log(
+        `Точная дата/время истечения: ${expiresAtDate.toLocaleString("ru-RU")}`,
+      );
+
+      // 4. Можно вычислить, сколько осталось «рукой»
+      const nowMs = Date.now();
+      const msLeft = expiresAtMs - nowMs;
+      const secLeft = Math.max(0, Math.floor(msLeft / 1000));
+      const minLeft = Math.floor(secLeft / 60);
+      const secRemainder = secLeft % 60;
+      console.log(`Осталось примерно: ${minLeft} мин ${secRemainder} сек.`);
+
+      // 5. И проверка — уже истекло или нет
+      if (msLeft <= 0) {
+        console.warn("⚠️ Сессия уже истекла");
+      } else {
+        console.log("✅ Сессия ещё валидна");
+      }
+    };
+    getSess();
+  }, []);
 
   // загрузить текущие назначения один раз
   useEffect(() => {
@@ -71,9 +119,11 @@ export const TaskAssignment: React.FC = () => {
     await getAssignments(taskId);
   };
 
-  const onDelete = async (assignmentId: string) => {
-    await deleteAssignment(assignmentId);
+  const onDelete = async (assignmentIds: string[]) => {
+    await deleteAssignment(assignmentIds);
   };
+
+  console.log(loading, assignments[taskId]);
 
   if (loading || !taskId) return <Loader />;
   const current: TAssignment[] = assignments[taskId] ?? [];
@@ -86,20 +136,27 @@ export const TaskAssignment: React.FC = () => {
         {current.length === 0 && (
           <li className="text-gray-500">No assignments yet.</li>
         )}
-        {current.map((a) => (
-          <li
-            key={a.assignmentId}
-            className="flex items-center justify-between bg-gray-50 p-3 rounded"
-          >
-            <span>
-              {a.taskTitle} – {a.userEmail} — {formatDate(a.startDate)}
-              {a.endDate ? ` → ${formatDate(a.endDate)}` : ""}
-            </span>
-            {isAuthor && (
-              <Button onClick={() => onDelete(a.assignmentId)}>Delete</Button>
-            )}
-          </li>
-        ))}
+        {current.map((a) => {
+          const assignmentsIds: string[] = [];
+          assignmentsIds.push(a.activeAssignmentId);
+          if (a.removedAssignmentId) {
+            assignmentsIds.push(a.removedAssignmentId);
+          }
+          return (
+            <li
+              key={`${assignmentsIds.join(``)}`}
+              className="flex items-center justify-between bg-gray-50 p-3 rounded"
+            >
+              <span>
+                {a.taskTitle} – {a.userEmail} — {formatDate(a.startDate)}
+                {a.endDate ? ` → ${formatDate(a.endDate)}` : ""}
+              </span>
+              {isAuthor && (
+                <Button onClick={() => onDelete(assignmentsIds)}>Delete</Button>
+              )}
+            </li>
+          );
+        })}
       </ul>
 
       {isAuthor && (

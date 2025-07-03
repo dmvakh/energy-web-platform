@@ -168,7 +168,8 @@ export const fetchAssignments = async (
     .from("task_assignment_intervals")
     .select(
       `
-      assignmentId:assignment_id,
+      activeAssignmentId:active_assignment_id,
+      removedAssignmentId:removed_assignment_id,
       taskId:task_id,
       taskTitle:task_title,
       userId:user_id,
@@ -196,15 +197,15 @@ export const fetchAssignments = async (
 };
 
 export const deleteAssignment = async (
-  assignmentId: string,
-): Promise<{ id: string; taskId: string }> => {
+  assignmentIds: string[],
+): Promise<{ id: string; taskId: string; status: string }[]> => {
   const { data, error } = await supabase
     .from("task_assignment")
     .delete()
-    .eq("id", assignmentId)
-    .select("id, taskId:task_id")
-    .single()
-    .overrideTypes<{ id: string; taskId: string }>();
+    .in("id", assignmentIds)
+    .select("id, taskId:task_id, status")
+    .order("status", { ascending: true })
+    .overrideTypes<{ id: string; taskId: string; status: string }[]>();
 
   if (error) {
     throw new Error(

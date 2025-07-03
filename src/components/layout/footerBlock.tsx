@@ -19,6 +19,7 @@ export const FooterBlock: FC = () => {
   const user = useAuthUser();
   const navigate = useNavigate();
   const handleLogout = async () => {
+    console.log("user", user);
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error("Ошибка выхода:", error.message);

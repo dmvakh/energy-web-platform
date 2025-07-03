@@ -8,6 +8,7 @@ import {
   fetchTasks,
   saveAssignment,
   deleteAssignment as deleteAssignmentAPI,
+  AssignmentStatus,
 } from "../api";
 import { SYSTEM, LANG } from "../lang";
 import { fetchUnits } from "../api";
@@ -269,23 +270,42 @@ export const useAppStore = create<TAppStore>((set, get) => {
           updateGlobalLoading();
         }
       },
-      deleteAssignment: async (assignmentId: string) => {
+      deleteAssignment: async (assignmentIds: string[]) => {
         set((s) => ({
           assignmentsStore: { ...s.assignmentsStore, loading: true },
         }));
         updateGlobalLoading();
-
         try {
-          const deleted = await deleteAssignmentAPI(assignmentId);
-
+          const deleted = await deleteAssignmentAPI(assignmentIds);
+          const activeAssignmentId = deleted.find(
+            (it) => it.status === AssignmentStatus.ACTIVE,
+          )?.id;
+          const removedAssignmentId =
+            deleted.find((it) => it.status === AssignmentStatus.REMOVED)?.id ??
+            null;
           set((s) => ({
             assignmentsStore: {
               ...s.assignmentsStore,
               assignments: {
                 ...s.assignmentsStore.assignments,
-                [deleted.taskId]: s.assignmentsStore.assignments[
-                  deleted.taskId
-                ].filter((a) => a.assignmentId !== assignmentId),
+                [deleted[0].taskId]: s.assignmentsStore.assignments[
+                  deleted[0].taskId
+                ].filter((a) => {
+                  if (removedAssignmentId) {
+                    if (
+                      a.activeAssignmentId !== activeAssignmentId &&
+                      a.removedAssignmentId !== removedAssignmentId
+                    ) {
+                      return true;
+                    }
+                    return false;
+                  } else {
+                    if (a.activeAssignmentId !== activeAssignmentId) {
+                      return true;
+                    }
+                    return false;
+                  }
+                }),
               },
             },
           }));

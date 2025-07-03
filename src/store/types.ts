@@ -38,7 +38,7 @@ export type TAssignmentsSubStore = {
     startDate: string,
     endDate?: string,
   ) => Promise<void>;
-  deleteAssignment: (assignmentId: string) => Promise<void>;
+  deleteAssignment: (assignmentIds: string[]) => Promise<void>;
 };
 
 export type TAppStore = {

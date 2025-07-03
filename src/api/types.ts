@@ -45,7 +45,8 @@ export const UserRoles = {
 export type TUserRoles = (typeof UserRoles)[keyof typeof UserRoles];
 
 export type TAssignment = {
-  assignmentId: string;
+  activeAssignmentId: string;
+  removedAssignmentId: string;
   taskId: string;
   taskTitle: string;
   userId: string;
