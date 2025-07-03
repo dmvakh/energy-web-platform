@@ -36,7 +36,7 @@ export const FooterBlock: FC = () => {
               src="https://doodleipsum.com/700/avatar-2"
               className="size-10"
               square
-              alt=""
+              alt="user avatar"
             />
             <span className="min-w-0">
               {/* <span className='block truncate text-sm/5 font-medium text-zinc-950 dark:text-white'>
