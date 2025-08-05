@@ -17,5 +17,5 @@ export type TTaskFormDefaults = {
   status: TTaskStatus;
   type: TTaskType;
   parent_id: string | null;
-  units_id: string;
+  units_id: string | null;
 };

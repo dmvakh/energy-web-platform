@@ -66,3 +66,4 @@ export {
 } from "./table";
 export { Strong, Text, TextLink, Code } from "./text";
 export { Textarea } from "./textarea";
+export { Section } from "./section";
