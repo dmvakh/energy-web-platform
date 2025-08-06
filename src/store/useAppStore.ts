@@ -219,6 +219,7 @@ export const useAppStore = create<TAppStore>((set) => {
         }
       },
     },
+
     assignmentsStore: {
       assignments: {},
       loading: false,
@@ -468,8 +469,6 @@ export const useAppStore = create<TAppStore>((set) => {
       },
     },
 
-    // Внутри create<TAppStore>((set) => ({ … })):
-
     paymentsStore: {
       walletsByUser: {} as Record<string, Wallet[]>,
       paymentsByProject: {} as Record<string, Payment[]>,
@@ -592,8 +591,8 @@ export const useAppStore = create<TAppStore>((set) => {
               ...state.paymentsStore,
               paymentsByProject: {
                 ...state.paymentsStore.paymentsByProject,
-                [p.project_id]: state.paymentsStore.paymentsByProject[
-                  p.project_id
+                [p.projectId]: state.paymentsStore.paymentsByProject[
+                  p.projectId
                 ].map((x) => (x.id === id ? p : x)),
               },
               myPayments: state.paymentsStore.myPayments.map((x) =>

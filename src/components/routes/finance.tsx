@@ -10,16 +10,20 @@ export const Finance: React.FC = () => {
   const user = useAuthUser();
   const { projectId } = useOutletContext<{ projectId: string }>();
   const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
-  const { payments, reload, updateStatus } = useProjectPayments(projectId!);
-  const { wallets } = useWallets(user.id);
+  const {
+    payments,
+    reload: paymentsReload,
+    updateStatus,
+  } = useProjectPayments(projectId!);
+  const { wallets, reload: walletsReload } = useWallets(user.id);
   const { contracts, getList: getContracts } = useAppStore(
     (s) => s.contractsStore,
   );
   const { documents, getTaskDocuments } = useAppStore((s) => s.documentsStore);
 
   useEffect(() => {
-    reload();
-  }, [reload]);
+    paymentsReload();
+  }, [paymentsReload]);
 
   useEffect(() => {
     if (!contracts.length) {
@@ -51,6 +55,7 @@ export const Finance: React.FC = () => {
         contracts={contracts}
         projectId={projectId}
         onClose={() => {
+          walletsReload();
           setModalIsOpen(false);
         }}
       />

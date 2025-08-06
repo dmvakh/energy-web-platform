@@ -129,17 +129,6 @@ export const PaymentForm: React.FC<TComponentType> = ({
     !!amount &&
     !isNaN(parseFloat(amount));
 
-  if (open) {
-    console.log("isFormValid", isFormValid);
-  }
-  // console.log("paymentType", paymentType);
-  // console.log("projectIdSel", projectIdSel);
-  // console.log("isObjectSelected", isObjectSelected);
-  // console.log("payeeId", payeeId);
-  // console.log("walletId", walletId);
-  // console.log("amount", amount);
-  // console.log("!isNaN(parseFloat(amount))", !isNaN(parseFloat(amount)));
-
   // handle submit
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

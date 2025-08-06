@@ -1,110 +1,83 @@
-import { useState, useEffect, useCallback } from "react";
-import type { Payment, TPaymentPayload, Wallet } from "../api/payments";
-import * as api from "../api/payments";
+import { useEffect, useCallback, useMemo } from "react";
+import { useAppStore } from "../store";
+import type { TPaymentPayload } from "../api";
 
-/**
- * Хук для работы с кошельками пользователя.
- */
+/** Хук для работы с кошельками пользователя. */
 export function useWallets(userId: string) {
-  const [wallets, setWallets] = useState<Wallet[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const rawWallets = useAppStore((s) => s.paymentsStore.walletsByUser[userId]);
+  const loading = useAppStore((s) => s.paymentsStore.loading);
+  const getWallets = useAppStore((s) => s.paymentsStore.getWallets);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      setWallets(await api.fetchWallets(userId));
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
+  const wallets = useMemo(() => rawWallets ?? [], [rawWallets]);
 
   useEffect(() => {
     if (userId !== "guest") {
-      load();
+      getWallets(userId);
     }
-  }, [load, userId]);
+  }, [userId, getWallets]);
 
-  if (userId === "guest") {
-    return {
-      wallets: [],
-      loading: false,
-      reload: load,
-    };
-  }
+  const reload = useCallback(() => {
+    if (userId !== "guest") {
+      getWallets(userId);
+    }
+  }, [userId, getWallets]);
 
-  return { wallets, loading, reload: load };
+  return { wallets, loading, reload };
 }
 
-/**
- * Хук для работы с платежами проекта.
- */
+/** Хук для работы с платежами проекта. */
 export function useProjectPayments(projectId: string) {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const rawPayments = useAppStore(
+    (s) => s.paymentsStore.paymentsByProject[projectId],
+  );
+  const loading = useAppStore((s) => s.paymentsStore.loading);
+  const getProjectPayments = useAppStore(
+    (s) => s.paymentsStore.getProjectPayments,
+  );
+  const createPayment = useAppStore((s) => s.paymentsStore.createPayment);
+  const updatePaymentStatus = useAppStore(
+    (s) => s.paymentsStore.updatePaymentStatus,
+  );
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      setPayments(await api.fetchPaymentsByProject(projectId));
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId]);
+  const payments = useMemo(() => rawPayments ?? [], [rawPayments]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    getProjectPayments(projectId);
+  }, [projectId, getProjectPayments]);
 
-  const create = async (payload: TPaymentPayload) => {
-    const p = await api.createPayment(payload);
-    setPayments((prev) => [p, ...prev]);
-    return p;
-  };
+  const reload = useCallback(() => {
+    getProjectPayments(projectId);
+  }, [projectId, getProjectPayments]);
 
-  const updateStatus = async (
-    id: string,
-    status: "pending" | "captured" | "failed",
-  ) => {
-    const p = await api.updatePaymentStatus(id, status);
-    setPayments((prev) => prev.map((x) => (x.id === id ? p : x)));
-    return p;
-  };
+  const create = useCallback(
+    (payload: TPaymentPayload) => createPayment(payload),
+    [createPayment],
+  );
 
-  return { payments, loading, reload: load, create, updateStatus };
+  const updateStatus = useCallback(
+    (id: string, status: "pending" | "captured" | "failed") =>
+      updatePaymentStatus(id, status),
+    [updatePaymentStatus],
+  );
+
+  return { payments, loading, reload, create, updateStatus };
 }
 
-/**
- * Хук для работы со всеми платежами пользователя.
- */
-
+/** Хук для работы со всеми платежами пользователя. */
 export function useMyPayments() {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const rawMyPayments = useAppStore((s) => s.paymentsStore.myPayments);
+  const loading = useAppStore((s) => s.paymentsStore.loading);
+  const getMyPayments = useAppStore((s) => s.paymentsStore.getMyPayments);
 
-  // Функция только для загрузки данных и обновления payments/loading=false
-  const load = useCallback(async () => {
-    try {
-      const data = await api.fetchMyPayments();
-      console.log("payments", data);
-      setPayments(data);
-    } catch (err) {
-      console.error("Ошибка при загрузке платежей:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const myPayments = useMemo(() => rawMyPayments ?? [], [rawMyPayments]);
 
-  // При монтировании сразу выставляем loading=true и запускаем загрузку
-  // useEffect(() => {
-  //   setLoading(true);
-  //   load();
-  // }, [load]);
+  useEffect(() => {
+    getMyPayments();
+  }, [getMyPayments]);
 
-  // Для ручного перезапуска тоже нужно сначала включить loading
   const reload = useCallback(() => {
-    setLoading(true);
-    load();
-  }, [load]);
+    getMyPayments();
+  }, [getMyPayments]);
 
-  return { payments, loading, reload };
+  return { payments: myPayments, loading, reload };
 }

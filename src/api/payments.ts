@@ -89,22 +89,27 @@ export async function updatePaymentStatus(
  */
 export async function fetchPaymentsByProject(
   taskId: string,
-): Promise<Payment[]> {
-  const { data, error } = await supabase
-    .from("payments")
-    .select(
-      `
-        *
-        ,payer:profiles!payments_payer_id_fkey(email)
-        ,payee:profiles!payments_payee_id_fkey(email)
-      `,
-    )
-    .eq("task_id", taskId)
-    .order("created_at", { ascending: false });
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to fetch payments");
+): Promise<Payment[] | undefined> {
+  console.log("fetchPaymentsByProject");
+  try {
+    const { data, error } = await supabase
+      .from("payments")
+      .select(
+        `
+          *
+          ,payer:profiles!payments_payer_id_fkey(email)
+          ,payee:profiles!payments_payee_id_fkey(email)
+        `,
+      )
+      .eq("task_id", taskId)
+      .order("created_at", { ascending: false });
+    if (error || !data) {
+      throw new Error(error?.message ?? "Failed to fetch payments");
+    }
+    return data.map((d) => camelizeObject<Payment>(d));
+  } catch (err) {
+    console.log("err", err);
   }
-  return data.map((d) => camelizeObject<Payment>(d));
 }
 
 /**
