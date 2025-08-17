@@ -41,13 +41,23 @@ export const Finance: React.FC = () => {
     setModalIsOpen((prev) => !prev);
   };
 
+  const onuUdateStatus = (
+    id: string,
+    status: "pending" | "captured" | "failed",
+  ) => {
+    updateStatus(id, status).then(() => {
+      paymentsReload();
+      walletsReload();
+    });
+  };
+
   return (
     <Section className="p-5">
       <WalletBalance wallets={wallets} />
       <Button className="mb-5 mt-5" disabled={!wallets} onClick={switchModal}>
         Pay
       </Button>
-      <PaymentList payments={payments} onUpdateStatus={updateStatus} />
+      <PaymentList payments={payments} onUpdateStatus={onuUdateStatus} />
       <PaymentForm
         open={modalIsOpen}
         wallets={wallets}

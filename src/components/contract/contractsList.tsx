@@ -28,8 +28,6 @@ export function ContractsList() {
   if (!user) return null;
   if (loading) return <Loader />;
 
-  console.log("contracts", contracts);
-
   return (
     <Section className="p-5">
       <Button onClick={() => navigate("/contracts/new")}>
@@ -56,8 +54,8 @@ export function ContractsList() {
               {c.date_signed_a && <p>Sign A: {c.date_signed_a}</p>}
               {c.date_signed_b && <p>Sign B: {c.date_signed_b}</p>}
               <p>
-                Контракт: {c.tasks.title} (
-                {`${c.tasks.start_date} - ${c.tasks.end_date}`})
+                Контракт: {c.tasks?.title} (
+                {`${c.tasks?.start_date} - ${c.tasks?.end_date}`})
               </p>
             </DescriptionDetails>
           </Fragment>

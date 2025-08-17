@@ -55,7 +55,6 @@ export const PaymentList: React.FC<PaymentListProps> = ({
                     {p.status !== "failed" && (
                       <Button
                         onClick={() => {
-                          console.log(111);
                           onUpdateStatus(p.id, "failed");
                         }}
                       >

@@ -505,16 +505,19 @@ export const useAppStore = create<TAppStore>((set) => {
         }));
         try {
           const p = await fetchPaymentsByProject(projectId);
-          set((state) => ({
-            paymentsStore: {
-              ...state.paymentsStore,
-              paymentsByProject: {
-                ...state.paymentsStore.paymentsByProject,
-                [projectId]: p,
+          set((state) => {
+            const nextMap: Record<string, Payment[]> = {
+              ...state.paymentsStore.paymentsByProject,
+              [projectId]: p,
+            };
+            return {
+              paymentsStore: {
+                ...state.paymentsStore,
+                paymentsByProject: nextMap,
+                loading: false,
               },
-              loading: false,
-            },
-          }));
+            };
+          });
         } catch (e) {
           console.error(e);
           set((state) => ({
@@ -552,21 +555,22 @@ export const useAppStore = create<TAppStore>((set) => {
         }));
         try {
           const p = await createPayment(payload);
-          set((state) => ({
-            paymentsStore: {
-              ...state.paymentsStore,
-              paymentsByProject: {
-                ...state.paymentsStore.paymentsByProject,
-                [p.project_id]: [
-                  p,
-                  ...(state.paymentsStore.paymentsByProject[p.project_id] ??
-                    []),
-                ],
+          set((state) => {
+            const prev =
+              state.paymentsStore.paymentsByProject[p.projectId] ?? [];
+            const nextMap: Record<string, Payment[]> = {
+              ...state.paymentsStore.paymentsByProject,
+              [p.projectId]: [p, ...prev],
+            };
+            return {
+              paymentsStore: {
+                ...state.paymentsStore,
+                paymentsByProject: nextMap,
+                myPayments: [p, ...state.paymentsStore.myPayments],
+                loading: false,
               },
-              myPayments: [p, ...state.paymentsStore.myPayments],
-              loading: false,
-            },
-          }));
+            };
+          });
           return p;
         } catch (e) {
           console.error(e);
@@ -586,21 +590,25 @@ export const useAppStore = create<TAppStore>((set) => {
         }));
         try {
           const p = await updatePaymentStatus(id, status);
-          set((state) => ({
-            paymentsStore: {
-              ...state.paymentsStore,
-              paymentsByProject: {
-                ...state.paymentsStore.paymentsByProject,
-                [p.projectId]: state.paymentsStore.paymentsByProject[
-                  p.projectId
-                ].map((x) => (x.id === id ? p : x)),
+          set((state) => {
+            const prev =
+              state.paymentsStore.paymentsByProject[p.projectId] ?? [];
+            const nextList: Payment[] = prev.map((x) => (x.id === id ? p : x));
+            const nextMap: Record<string, Payment[]> = {
+              ...state.paymentsStore.paymentsByProject,
+              [p.projectId]: nextList,
+            };
+            return {
+              paymentsStore: {
+                ...state.paymentsStore,
+                paymentsByProject: nextMap,
+                myPayments: state.paymentsStore.myPayments.map((x) =>
+                  x.id === id ? p : x,
+                ),
+                loading: false,
               },
-              myPayments: state.paymentsStore.myPayments.map((x) =>
-                x.id === id ? p : x,
-              ),
-              loading: false,
-            },
-          }));
+            };
+          });
           return p;
         } catch (e) {
           console.error(e);

@@ -89,8 +89,7 @@ export async function updatePaymentStatus(
  */
 export async function fetchPaymentsByProject(
   taskId: string,
-): Promise<Payment[] | undefined> {
-  console.log("fetchPaymentsByProject");
+): Promise<Payment[]> {
   try {
     const { data, error } = await supabase
       .from("payments")
@@ -109,6 +108,7 @@ export async function fetchPaymentsByProject(
     return data.map((d) => camelizeObject<Payment>(d));
   } catch (err) {
     console.log("err", err);
+    throw new Error(`Failed to fetch payments: ${err}`);
   }
 }
 
