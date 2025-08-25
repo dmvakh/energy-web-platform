@@ -184,8 +184,7 @@ export const ContractForm: FC = () => {
 
     let contract: TContract;
     if (isEdit && id) {
-      await save(id, payload);
-      contract = c!;
+      contract = await save(id, payload);
     } else {
       contract = await create(payload);
     }
@@ -199,7 +198,7 @@ export const ContractForm: FC = () => {
     }
 
     // upsert майлстоунов через API задач
-    if (taskId) {
+    if (contract) {
       const upserts: TMilestoneUpsertItem[] = milestones.map((m) => ({
         id: m.id,
         title: m.title,
@@ -209,7 +208,7 @@ export const ContractForm: FC = () => {
         amount: m.amount ?? null,
         late_penalty_per_day: m.late_penalty_per_day ?? null,
       }));
-      await upsertMilestonesForParent(taskId, upserts);
+      await upsertMilestonesForParent(contract.task_id, upserts);
     }
 
     navigate("/contracts");

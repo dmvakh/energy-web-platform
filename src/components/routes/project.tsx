@@ -81,7 +81,7 @@ export const Project: React.FC = () => {
             <div className="flex justify-between">
               <DescriptionTerm>Amount</DescriptionTerm>
               <DescriptionDetails>
-                {task.amount} {task.measurementUnits.title}
+                {task.amount} {task?.measurementUnits?.title}
               </DescriptionDetails>
             </div>
           )}
