@@ -167,7 +167,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         <label className="block text-sm font-medium">Units</label>
         <select
           name="units_id"
-          value={formValues.units_id}
+          value={formValues.units_id ?? undefined}
           onChange={handleChange}
           disabled={unitsLoading}
           className="mt-1 block w-full rounded border p-2 bg-white disabled:opacity-50"
