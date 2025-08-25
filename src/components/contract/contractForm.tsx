@@ -1,4 +1,3 @@
-// src/components/contract/ContractForm.tsx
 import {
   useEffect,
   useState,
@@ -16,6 +15,12 @@ import {
   type TUserProfile,
 } from "../../api";
 import { Button } from "../catalyst";
+import { MilestonesEditor, type TLocalMilestone } from ".";
+import {
+  fetchMilestonesByParent,
+  upsertMilestonesForParent,
+  type TMilestoneUpsertItem,
+} from "../../api/tasks";
 
 export const ContractForm: FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -46,28 +51,57 @@ export const ContractForm: FC = () => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
 
+  // сумма контракта (может заполнить проект, если там пусто)
+  const [amount, setAmount] = useState<string>("");
+
   // поиск стороны B
   const [userBQuery, setUserBQuery] = useState<string>("");
   const [userBOptions, setUserBOptions] = useState<TUserProfile[]>([]);
   const [userBId, setUserBId] = useState<string>("");
 
+  // файл
   const [file, setFile] = useState<File | null>(null);
 
-  // 1) грузим проекты текущего пользователя ровно один раз
+  // локальные майлстоуны
+  const [milestones, setMilestones] = useState<TLocalMilestone[]>([]);
+
+  // 1) загрузка проектов
   useEffect(() => {
     if (user && !tasksFetched && !tasksLoading) {
       getTasks();
     }
   }, [user, tasksFetched, tasksLoading, getTasks]);
 
-  // 2) при редактировании подгружаем контракт
+  // 2) редактирование — тянем контракт
   useEffect(() => {
     if (isEdit && id) {
       getById(id);
     }
   }, [isEdit, id, getById]);
 
-  // 3) заполняем форму из выбранного контракта
+  // 3) при выборе проекта — тянем майлстоуны из API задач
+  useEffect(() => {
+    if (!taskId) {
+      setMilestones([]);
+      return;
+    }
+    (async () => {
+      const list = await fetchMilestonesByParent(taskId);
+      setMilestones(
+        list.map((m) => ({
+          id: m.id,
+          title: m.title,
+          description: m.description ?? "",
+          start_date: m.startDate,
+          end_date: m.endDate ?? "",
+          amount: m.amount ?? null,
+          late_penalty_per_day: m?.latePenaltyPerDay ?? null,
+        })),
+      );
+    })();
+  }, [taskId]);
+
+  // 4) заполняем форму из контракта
   useEffect(() => {
     if (isEdit && c) {
       setTaskId(c.task_id);
@@ -76,11 +110,23 @@ export const ContractForm: FC = () => {
       setStartDate(c.start_date);
       setEndDate(c.end_date ?? "");
       setUserBId(c.user_b);
-      setUserBQuery(""); // не пытаемся заранее подставлять email — оставим поле пустым
+      setUserBQuery("");
+      setAmount(c.amount != null ? String(c.amount) : "");
     }
   }, [isEdit, c]);
 
-  // 4) debounce-поиск пользователeй по email для user_b
+  // 5) автоподстановка суммы проекта (если контракт новый и проект имеет amount)
+  useEffect(() => {
+    if (!taskId) return;
+    const project = tasks.find((t) => t.id === taskId);
+    if (project && amount === "") {
+      if (project.amount != null) {
+        setAmount(String(project.amount));
+      }
+    }
+  }, [taskId, tasks, amount]); // один раз при смене проекта
+
+  // 6) поиск user_b
   useEffect(() => {
     if (!userBQuery || userBQuery.length < 2) {
       setUserBOptions([]);
@@ -101,12 +147,26 @@ export const ContractForm: FC = () => {
     setFile(e.target.files?.[0] ?? null);
   };
 
+  // валидация дат майлстоунов
+  const isMilestonesDatesValid = milestones.every((m) => {
+    if (!m.start_date || !m.end_date) return false;
+    if (m.start_date < startDate) return false;
+    if (endDate && m.end_date > endDate) return false;
+    return true;
+  });
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) return;
-
-    // требуем, чтобы сторона B была выбрана из результатов (userBId)
     if (!userBId) return;
+    if (!isMilestonesDatesValid) return;
+
+    const contractAmount =
+      amount === ""
+        ? null
+        : Number.isNaN(Number(amount))
+          ? null
+          : Number(amount);
 
     // создаём/обновляем контракт без file_url
     const payload = {
@@ -119,6 +179,7 @@ export const ContractForm: FC = () => {
       user_b: userBId,
       file_url: "",
       creator_id: user.id,
+      amount: contractAmount, // 👈 новая сумма контракта
     };
 
     let contract: TContract;
@@ -129,12 +190,26 @@ export const ContractForm: FC = () => {
       contract = await create(payload);
     }
 
-    // если выбран файл — загружаем и прописываем путь относительно бакета
+    // файл
     if (file) {
       const folder = `contracts/${user.id}_${userBId}_${contract.id}`;
       const path = `${folder}/${file.name}`;
       await uploadFile(path, file);
       await save(contract.id, { file_url: path });
+    }
+
+    // upsert майлстоунов через API задач
+    if (taskId) {
+      const upserts: TMilestoneUpsertItem[] = milestones.map((m) => ({
+        id: m.id,
+        title: m.title,
+        description: m.description ?? "",
+        start_date: m.start_date,
+        end_date: m.end_date,
+        amount: m.amount ?? null,
+        late_penalty_per_day: m.late_penalty_per_day ?? null,
+      }));
+      await upsertMilestonesForParent(taskId, upserts);
     }
 
     navigate("/contracts");
@@ -148,7 +223,11 @@ export const ContractForm: FC = () => {
   // только проекты, созданные текущим пользователем
   const myProjects = tasks.filter((t) => t.creatorId === user.id);
 
-  const isSubmitDisabled = !taskId || !title || !startDate || !userBId;
+  // редактирование майлстоунов только в DRAFT (для нового — считаем DRAFT)
+  const isDraft = !isEdit || c?.status === "DRAFT";
+
+  const isSubmitDisabled =
+    !taskId || !title || !startDate || !userBId || !isMilestonesDatesValid;
 
   return (
     <form
@@ -215,6 +294,25 @@ export const ContractForm: FC = () => {
         />
       </div>
 
+      {/* Amount (контракт) */}
+      <div>
+        <label
+          htmlFor="amount"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Сумма контракта
+        </label>
+        <input
+          id="amount"
+          type="number"
+          step="0.01"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          className="mt-1 block w-full rounded border p-2"
+          placeholder="Если у проекта не задана — укажите здесь"
+        />
+      </div>
+
       {/* Dates */}
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -252,19 +350,19 @@ export const ContractForm: FC = () => {
         </div>
       </div>
 
-      {/* Side B search by email */}
+      {/* Side B search */}
       <div>
         <label
           htmlFor="userBQuery"
           className="block text-sm font-medium text-gray-700"
         >
-          Сторона B — поиск по e‑mail
+          Сторона B — поиск по e-mail
         </label>
         <input
           id="userBQuery"
           value={userBQuery}
           onChange={(e) => setUserBQuery(e.target.value)}
-          placeholder="Начните вводить e‑mail…"
+          placeholder="Начните вводить e-mail…"
           className="mt-1 block w-full rounded border p-2"
         />
         {userBOptions.length > 0 && (
@@ -294,10 +392,19 @@ export const ContractForm: FC = () => {
         )}
         {!!userBId && userBOptions.length === 0 && isEdit && (
           <p className="mt-2 text-sm text-gray-600">
-            Пользователь выбран (из сохранённого контракта).
+            Пользователь выбран ранее.
           </p>
         )}
       </div>
+
+      {/* Milestones editor */}
+      <MilestonesEditor
+        disabled={!isDraft}
+        contractStart={startDate}
+        contractEnd={endDate || null}
+        list={milestones}
+        onChange={setMilestones}
+      />
 
       {/* File upload */}
       <div>

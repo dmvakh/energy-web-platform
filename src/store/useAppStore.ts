@@ -1,3 +1,5 @@
+// src/store/useAppStore.ts
+
 import { create } from "zustand";
 import type { TAppStore } from ".";
 import {

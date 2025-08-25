@@ -26,16 +26,16 @@ export const Finance: React.FC = () => {
   }, [paymentsReload]);
 
   useEffect(() => {
-    if (!contracts.length) {
+    if (!contracts?.length) {
       getContracts();
     }
-  }, []);
+  }, [contracts, getContracts]);
 
   useEffect(() => {
     if (!documents?.tasks?.[projectId]?.length) {
       getTaskDocuments(projectId);
     }
-  }, []);
+  }, [documents?.tasks, getTaskDocuments, projectId]);
 
   const switchModal = () => {
     setModalIsOpen((prev) => !prev);

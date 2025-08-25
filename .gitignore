@@ -24,3 +24,5 @@ sql
 *.sln
 *.sw?
 description.txt
+chat
+.zed

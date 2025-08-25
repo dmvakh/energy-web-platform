@@ -33,6 +33,7 @@ export type TTaskWithUnits = {
   parentId?: string;
   files: string | null;
   measurementUnits: TMeasurementUnit;
+  latePenaltyPerDay: number;
 };
 
 export const UserRoles = {
@@ -75,6 +76,8 @@ export type TUserProfile = {
   email: string;
 };
 
+// дополнение существующих типов
+
 export type TContract = {
   id: string;
   title: string;
@@ -89,6 +92,7 @@ export type TContract = {
   status: string;
   creator_id: string;
   task_id: string;
+  amount: number | null;
   tasks: {
     title: string;
     start_date: string;
@@ -99,14 +103,15 @@ export type TContract = {
 export type TContractPayload = {
   title: string;
   description: string;
-  start_date: string; // ISO‐строка, e.g. "2025-08-01"
-  end_date: string | null; // либо ISO‐строка, либо null
-  user_a: string; // UUID стороны A
-  user_b: string; // UUID стороны B
-  file_url: string; // публичный URL из Supabase Storage
-  creator_id: string; // UUID создателя
-  date_signed_a?: string; // при апдейте подписи A
-  date_signed_b?: string; // при апдейте подписи B
+  start_date: string;
+  end_date: string | null;
+  user_a: string;
+  user_b: string;
+  file_url: string;
+  creator_id: string;
+  amount?: number | null;
+  date_signed_a?: string;
+  date_signed_b?: string;
 };
 
 export type ApiPayment = {

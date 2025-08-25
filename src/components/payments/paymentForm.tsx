@@ -58,7 +58,7 @@ export const PaymentForm: React.FC<TComponentType> = ({
   const [contractId, setContractId] = useState<string>("");
   const [invoiceFileName, setInvoiceFileName] = useState<string>("");
   const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("");
+  // const [description, setDescription] = useState("");
 
   const projectContracts = contracts.filter(
     (c) => c.task_id === projectIdSel && c.status === "SIGNED",
@@ -94,7 +94,7 @@ export const PaymentForm: React.FC<TComponentType> = ({
     if (paymentType === "INVOICE") {
       setInvoiceFileName(documents.tasks[projectId][0].id);
     }
-  }, [paymentType]);
+  }, [paymentType, documents?.tasks, contracts, projectId]);
 
   // search payees by email substring
   useEffect(() => {
@@ -115,7 +115,7 @@ export const PaymentForm: React.FC<TComponentType> = ({
     if (!documents?.tasks?.[projectId]?.length) {
       getTaskDocuments(projectId);
     }
-  }, []);
+  }, [documents?.tasks, getTaskDocuments, projectId]);
 
   // form validation
   const isObjectSelected =
@@ -144,7 +144,7 @@ export const PaymentForm: React.FC<TComponentType> = ({
       objectId,
       walletId,
       amount: parseFloat(amount),
-      description: description || undefined,
+      // description: description || undefined,
     });
 
     if (onSuccess) {
@@ -324,9 +324,7 @@ export const PaymentForm: React.FC<TComponentType> = ({
         </DialogBody>
 
         <DialogActions className="flex justify-end space-x-2">
-          <Button variant="plain" onClick={onClose}>
-            Отмена
-          </Button>
+          <Button onClick={onClose}>Отмена</Button>
           <Button type="submit" disabled={!isFormValid}>
             Создать
           </Button>
