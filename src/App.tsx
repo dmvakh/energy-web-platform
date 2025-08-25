@@ -1,4 +1,4 @@
-import { Route, Routes, Outlet } from "react-router";
+import { Route, Routes, Outlet, Navigate } from "react-router";
 import "./App.css";
 import { AppLayout } from "./components/layout/appLayout";
 import { Dashboard } from "./components/routes/dashboard";
@@ -13,6 +13,9 @@ import { Login } from "./components/routes/login";
 import "wx-react-gantt/dist/gantt.css";
 import { ProtectedRoute } from "./components/routes/protectedRoute";
 import { TaskAssignment } from "./components/routes/projectAssignment";
+import { ContractDetail, ContractForm } from "./components/contract";
+import { ContractsList } from "./components/contract/contractsList";
+import { PaymentsStandalone } from "./components/routes/payments";
 
 function App() {
   return (
@@ -38,6 +41,17 @@ function App() {
             <Route path=":id/assign" element={<TaskAssignment />} />
           </Route>
         </Route>
+        {/* Секция «Контракты» */}
+        <Route path="contracts">
+          <Route index element={<ContractsList />} />
+          <Route path="new" element={<ContractForm />} />
+          <Route path=":id" element={<ContractDetail />} />
+          <Route path=":id/edit" element={<ContractForm />} />
+        </Route>
+        <Route path="payments">
+          <Route index element={<PaymentsStandalone />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   );

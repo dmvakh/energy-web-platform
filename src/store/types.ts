@@ -1,5 +1,14 @@
 import type { FileObject } from "@supabase/storage-js";
-import type { TTaskWithUnits, TMeasurementUnit, TAssignment } from "../api";
+import type {
+  TTaskWithUnits,
+  TMeasurementUnit,
+  TAssignment,
+  TContract,
+  TContractPayload,
+  Wallet,
+  Payment,
+  createPayment,
+} from "../api";
 
 type TTasksSubStore = {
   tasks: TTaskWithUnits[];
@@ -16,19 +25,21 @@ type TTasksSubStore = {
   deleteTask: (id: string) => Promise<void>;
 };
 
+export type TDocuments = {
+  personal: FileObject[];
+  tasks: {
+    [key: string]: FileObject[];
+  };
+};
+
 type TDocumentsSubStore = {
   loading: boolean;
   fetched: boolean;
-  documents: {
-    personal: FileObject[];
-    tasks: {
-      [key: string]: FileObject[];
-    };
-  };
+  documents: TDocuments;
   getTaskDocuments: (path: string) => Promise<void>;
 };
 
-export type TAssignmentsSubStore = {
+type TAssignmentsSubStore = {
   assignments: Record<string, TAssignment[]>;
   loading: boolean;
   getAssignments: (taskId: string) => Promise<void>;
@@ -41,9 +52,42 @@ export type TAssignmentsSubStore = {
   deleteAssignment: (assignmentIds: string[]) => Promise<void>;
 };
 
+export type TContractsStore = {
+  contracts: TContract[];
+  selected: TContract | null;
+  loading: boolean;
+  fetched: boolean;
+  getList: () => Promise<void>;
+  getById: (id: string) => Promise<void>;
+  create: (payload: TContractPayload) => Promise<TContract>;
+  save: (id: string, payload: Partial<TContractPayload>) => Promise<TContract>;
+  delete: (id: string) => Promise<void>;
+  uploadFile: (path: string, file: File) => Promise<string>;
+};
+
+export type TPaymentsStore = {
+  walletsByUser: Record<string, Wallet[]>;
+  paymentsByProject: Record<string, Payment[]>;
+  myPayments: Payment[];
+  loading: boolean;
+
+  getWallets: (userId: string) => Promise<void>;
+  getProjectPayments: (projectId: string) => Promise<void>;
+  getMyPayments: () => Promise<void>;
+  createPayment: (
+    payload: Parameters<typeof createPayment>[0],
+  ) => Promise<Payment>;
+
+  updatePaymentStatus: (
+    id: string,
+    status: "pending" | "captured" | "failed",
+  ) => Promise<Payment>;
+};
+
 export type TAppStore = {
   tasksStore: TTasksSubStore;
   documentsStore: TDocumentsSubStore;
   assignmentsStore: TAssignmentsSubStore;
-  globalLoading: boolean;
+  contractsStore: TContractsStore;
+  paymentsStore: TPaymentsStore;
 };

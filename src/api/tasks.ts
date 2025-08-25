@@ -1,4 +1,4 @@
-// src/api/index.ts
+// src/api/tasks.ts
 
 import { AssignmentStatus, supabase } from ".";
 import type {
@@ -28,7 +28,8 @@ export const fetchTasks = async (type: string): Promise<TTaskWithUnits[]> => {
       measurementUnits:measurement_units (
         id,
         title
-      )
+      ),
+      latePenaltyPerDay:late_penalty_per_day
     `,
     )
     .eq("type", type)
@@ -214,3 +215,112 @@ export const deleteAssignment = async (
   }
   return data;
 };
+
+export type TMilestoneUpsertItem = {
+  id?: string;
+  title: string;
+  description?: string | null;
+  start_date: string; // ISO "YYYY-MM-DD"
+  end_date: string | null; // ISO или null
+  amount?: number | null;
+  late_penalty_per_day?: number | null;
+  units_id?: string | null;
+};
+
+export async function fetchMilestonesByParent(
+  parentId: string,
+): Promise<TTaskWithUnits[]> {
+  const { data, error } = await supabase
+    .from("tasks")
+    .select(
+      `
+      id,
+      createdAt:created_at,
+      title,
+      description,
+      creatorId:creator_id,
+      startDate:start_date,
+      endDate:end_date,
+      amount,
+      status,
+      type,
+      parentId:parent_id,
+      files,
+      measurementUnits:measurement_units ( id, title )
+    `,
+    )
+    .eq("parent_id", parentId)
+    .eq("type", "PROJECT")
+    .order("start_date", { ascending: true })
+    .overrideTypes<TTaskWithUnits[]>();
+
+  if (error) {
+    throw new Error(`${error.name} (${error.message} ${error.details})`);
+  }
+  return data ?? [];
+}
+
+export async function upsertMilestonesForParent(
+  parentId: string,
+  nextList: TMilestoneUpsertItem[],
+): Promise<TTaskWithUnits[]> {
+  // текущее состояние
+  const prev = await fetchMilestonesByParent(parentId);
+  const prevMap = new Map(prev.map((m) => [m.id, m]));
+  const nextIds = new Set<string>();
+
+  // UPDATE / INSERT
+  for (const n of nextList) {
+    if (!n.title || !n.start_date) continue;
+
+    if (n.id && prevMap.has(n.id)) {
+      nextIds.add(n.id);
+      const { error } = await supabase
+        .from("tasks")
+        .update({
+          title: n.title,
+          description: n.description ?? null,
+          start_date: n.start_date,
+          end_date: n.end_date,
+          amount: n.amount ?? null,
+          late_penalty_per_day: n.late_penalty_per_day ?? null,
+          units_id: n.units_id ?? null,
+        })
+        .eq("id", n.id);
+
+      if (error) {
+        throw new Error(`${error.name} (${error.message} ${error.details})`);
+      }
+    } else {
+      const { error } = await supabase.from("tasks").insert({
+        title: n.title,
+        description: n.description ?? null,
+        start_date: n.start_date,
+        end_date: n.end_date,
+        amount: n.amount ?? null,
+        status: "PENDING",
+        type: "PROJECT", // майлстоун = PROJECT
+        parent_id: parentId,
+        units_id: n.units_id ?? null,
+        late_penalty_per_day: n.late_penalty_per_day ?? null,
+      });
+
+      if (error) {
+        throw new Error(`${error.name} (${error.message} ${error.details})`);
+      }
+    }
+  }
+
+  // DELETE
+  for (const old of prev) {
+    if (!nextList.some((n) => n.id === old.id)) {
+      const { error } = await supabase.from("tasks").delete().eq("id", old.id);
+      if (error) {
+        throw new Error(`${error.name} (${error.message} ${error.details})`);
+      }
+    }
+  }
+
+  // вернуть свежее состояние
+  return await fetchMilestonesByParent(parentId);
+}

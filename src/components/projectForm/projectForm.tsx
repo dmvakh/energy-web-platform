@@ -11,7 +11,10 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   onCancel,
   saving,
 }) => {
-  const { units, unitsLoading } = useAppStore((s) => s.tasksStore);
+  // список проектов для выбора parent_id
+  const { tasks, units, unitsLoading } = useAppStore((s) => s.tasksStore);
+
+  // дефолты формы
   const defaults: TTaskFormDefaults = {
     title: initialData?.title ?? "",
     description: initialData?.description ?? "",
@@ -20,10 +23,10 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     amount: initialData?.amount ?? 0,
     status: initialData?.status ?? TaskStatus.PENDING,
     type: initialData?.type ?? TaskType.PROJECT,
-    parent_id: initialData?.parentId ?? null,
-    units_id: initialData?.measurementUnits?.id ?? "",
+    // parent_id: либо существующий, либо пустая строка
+    parent_id: initialData?.parentId ?? "",
+    units_id: initialData?.measurementUnits?.id ?? null,
   };
-
   if (initialData?.id) {
     defaults.id = initialData.id;
   }
@@ -46,13 +49,19 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     const { name, value } = e.target;
     setFormValues((prev) => ({
       ...prev,
-      [name]: name === "amount" ? Number(value) : value,
+      [name]: name === "amount" ? Number(value) : value, // для parent_id и units_id останется строка
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSave({ ...formValues });
+    // если пользователь оставил parent_id пустым — передаём null
+    const payload = {
+      ...formValues,
+      units_id: formValues.units_id !== "" ? formValues.units_id : null,
+      parent_id: formValues.parent_id === "" ? null : formValues.parent_id,
+    };
+    await onSave(payload);
   };
 
   return (
@@ -103,6 +112,27 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         </div>
       </div>
 
+      {/* Parent Project */}
+      <div>
+        <label className="block text-sm font-medium">Parent Project</label>
+        <select
+          name="parent_id"
+          value={formValues.parent_id ?? undefined}
+          onChange={handleChange}
+          className="mt-1 block w-full rounded border p-2 bg-white"
+        >
+          <option value="">— No parent —</option>
+          {tasks
+            // не даём самому себе стать родителем
+            .filter((t) => t.id !== formValues.id)
+            .map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.title}
+              </option>
+            ))}
+        </select>
+      </div>
+
       {/* Amount & Status */}
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -137,7 +167,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         <label className="block text-sm font-medium">Units</label>
         <select
           name="units_id"
-          value={formValues.units_id}
+          value={formValues.units_id ?? undefined}
           onChange={handleChange}
           disabled={unitsLoading}
           className="mt-1 block w-full rounded border p-2 bg-white disabled:opacity-50"

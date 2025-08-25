@@ -1,3 +1,5 @@
+// src/store/useAppStore.ts
+
 import { create } from "zustand";
 import type { TAppStore } from ".";
 import {
@@ -9,26 +11,29 @@ import {
   saveAssignment,
   deleteAssignment as deleteAssignmentAPI,
   AssignmentStatus,
+  fetchContracts,
+  fetchContractById,
+  createContractAPI,
+  updateContractAPI,
+  deleteContractAPI,
+  uploadContractFile,
+  type TContractPayload,
+  type TContract,
+  type Wallet,
+  type Payment,
 } from "../api";
 import { SYSTEM, LANG } from "../lang";
 import { fetchUnits } from "../api";
+import {
+  fetchPaymentsByProject,
+  fetchMyPayments,
+  fetchWallets,
+  createPayment,
+  updatePaymentStatus,
+} from "../api";
 
-export const useAppStore = create<TAppStore>((set, get) => {
-  const updateGlobalLoading = () => {
-    const {
-      tasksStore: { loading: tasksLoading, unitsLoading },
-      documentsStore: { loading: docsLoading },
-      assignmentsStore: { loading: assignsLoading },
-    } = get();
-    set({
-      globalLoading:
-        tasksLoading || unitsLoading || docsLoading || assignsLoading,
-    });
-  };
-
+export const useAppStore = create<TAppStore>((set) => {
   return {
-    globalLoading: false,
-
     tasksStore: {
       tasks: [],
       units: [],
@@ -59,7 +64,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
         set((state) => ({
           tasksStore: { ...state.tasksStore, loading: true },
         }));
-        updateGlobalLoading();
 
         try {
           const data = await fetchTasks("PROJECT");
@@ -79,7 +83,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
               fetched: true,
             },
           }));
-          updateGlobalLoading();
         }
       },
 
@@ -87,7 +90,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
         set((state) => ({
           tasksStore: { ...state.tasksStore, unitsLoading: true },
         }));
-        updateGlobalLoading();
 
         try {
           const data = await fetchUnits();
@@ -106,7 +108,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
               unitsLoading: false,
             },
           }));
-          updateGlobalLoading();
         }
       },
 
@@ -114,7 +115,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
         set((state) => ({
           tasksStore: { ...state.tasksStore, loading: true },
         }));
-        updateGlobalLoading();
 
         try {
           const deletedId = await deleteTaskById(id);
@@ -136,7 +136,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
               fetched: true,
             },
           }));
-          updateGlobalLoading();
         }
       },
 
@@ -144,7 +143,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
         set((state) => ({
           tasksStore: { ...state.tasksStore, loading: true },
         }));
-        updateGlobalLoading();
 
         try {
           const task = await fetchTaskById(id);
@@ -179,7 +177,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
               fetched: true,
             },
           }));
-          updateGlobalLoading();
         }
       },
     },
@@ -195,7 +192,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
         set((state) => ({
           documentsStore: { ...state.documentsStore, loading: true },
         }));
-        updateGlobalLoading();
 
         try {
           const taskDocuments = await fetchRawDocuments(`tasks/${taskId}`);
@@ -222,10 +218,10 @@ export const useAppStore = create<TAppStore>((set, get) => {
               fetched: true,
             },
           }));
-          updateGlobalLoading();
         }
       },
     },
+
     assignmentsStore: {
       assignments: {},
       loading: false,
@@ -233,7 +229,6 @@ export const useAppStore = create<TAppStore>((set, get) => {
         set((s) => ({
           assignmentsStore: { ...s.assignmentsStore, loading: true },
         }));
-        updateGlobalLoading();
         try {
           const list = await fetchAssignments(taskId);
           set((s) => ({
@@ -251,30 +246,27 @@ export const useAppStore = create<TAppStore>((set, get) => {
           set((s) => ({
             assignmentsStore: { ...s.assignmentsStore, loading: false },
           }));
-          updateGlobalLoading();
         }
       },
       createAssignment: async (taskId, userId, startDate, endDate) => {
         set((s) => ({
           assignmentsStore: { ...s.assignmentsStore, loading: true },
         }));
-        updateGlobalLoading();
         try {
           await saveAssignment(taskId, userId, startDate, endDate);
         } catch (e) {
           console.error(SYSTEM.ERROR_DATA_LOADING[LANG], e);
         } finally {
+          console.log("createAssignment - finaly");
           set((s) => ({
             assignmentsStore: { ...s.assignmentsStore, loading: false },
           }));
-          updateGlobalLoading();
         }
       },
       deleteAssignment: async (assignmentIds: string[]) => {
         set((s) => ({
           assignmentsStore: { ...s.assignmentsStore, loading: true },
         }));
-        updateGlobalLoading();
         try {
           const deleted = await deleteAssignmentAPI(assignmentIds);
           const activeAssignmentId = deleted.find(
@@ -315,7 +307,317 @@ export const useAppStore = create<TAppStore>((set, get) => {
           set((s) => ({
             assignmentsStore: { ...s.assignmentsStore, loading: false },
           }));
-          updateGlobalLoading();
+        }
+      },
+    },
+
+    contractsStore: {
+      contracts: [],
+      selected: null,
+      loading: false,
+      fetched: false,
+
+      getList: async () => {
+        set((s) => ({
+          contractsStore: { ...s.contractsStore, loading: true },
+        }));
+        try {
+          const list = await fetchContracts();
+          set((s) => ({
+            contractsStore: {
+              ...s.contractsStore,
+              contracts: list,
+            },
+          }));
+        } catch (e) {
+          console.error("Ошибка загрузки контрактов:", e);
+        } finally {
+          set((s) => ({
+            contractsStore: {
+              ...s.contractsStore,
+              loading: false,
+              fetched: true,
+            },
+          }));
+        }
+      },
+
+      getById: async (id) => {
+        set((s) => ({
+          contractsStore: { ...s.contractsStore, loading: true },
+        }));
+        try {
+          const contract = await fetchContractById(id);
+          set((s) => ({
+            contractsStore: {
+              ...s.contractsStore,
+              selected: contract,
+              contracts: [
+                contract,
+                ...s.contractsStore.contracts.filter((c) => c.id !== id),
+              ],
+            },
+          }));
+        } catch (e) {
+          console.error("Ошибка загрузки контракта:", e);
+        } finally {
+          set((s) => ({
+            contractsStore: {
+              ...s.contractsStore,
+              loading: false,
+              fetched: true,
+            },
+          }));
+        }
+      },
+
+      create: async (payload): Promise<TContract> => {
+        // включаем лоадинг
+        set((s) => ({
+          contractsStore: { ...s.contractsStore, loading: true },
+        }));
+
+        try {
+          // 1) создаём контракт
+          const newC = await createContractAPI(payload);
+
+          // 2) кладём его в стейт
+          set((s) => ({
+            contractsStore: {
+              ...s.contractsStore,
+              contracts: [newC, ...s.contractsStore.contracts],
+            },
+          }));
+
+          // 3) возвращаем созданный объект
+          return newC;
+        } catch (e) {
+          console.error("Ошибка создания контракта:", e);
+          // контракт не вернётся — вызывающий код получит rejected promise
+          throw e;
+        } finally {
+          // выключаем лоадинг
+          set((s) => ({
+            contractsStore: { ...s.contractsStore, loading: false },
+          }));
+        }
+      },
+
+      save: async (
+        id: string,
+        payload: Partial<TContractPayload>,
+      ): Promise<TContract> => {
+        set((s) => ({
+          contractsStore: { ...s.contractsStore, loading: true },
+        }));
+
+        try {
+          // 1) обновляем контракт
+          const updated = await updateContractAPI(id, payload);
+
+          // 2) «вшиваем» его в список и в selected
+          set((s) => ({
+            contractsStore: {
+              ...s.contractsStore,
+              contracts: s.contractsStore.contracts.map((c) =>
+                c.id === id ? updated : c,
+              ),
+              selected:
+                s.contractsStore.selected?.id === id
+                  ? updated
+                  : s.contractsStore.selected,
+            },
+          }));
+
+          // 3) возвращаем обновлённый объект
+          return updated;
+        } catch (e) {
+          console.error("Ошибка сохранения контракта:", e);
+          throw e;
+        } finally {
+          set((s) => ({
+            contractsStore: { ...s.contractsStore, loading: false },
+          }));
+        }
+      },
+
+      delete: async (id) => {
+        set((s) => ({
+          contractsStore: { ...s.contractsStore, loading: true },
+        }));
+        try {
+          await deleteContractAPI(id);
+          set((s) => ({
+            contractsStore: {
+              ...s.contractsStore,
+              contracts: s.contractsStore.contracts.filter((c) => c.id !== id),
+              selected:
+                s.contractsStore.selected?.id === id
+                  ? null
+                  : s.contractsStore.selected,
+            },
+          }));
+        } catch (e) {
+          console.error("Ошибка удаления контракта:", e);
+        } finally {
+          set((s) => ({
+            contractsStore: { ...s.contractsStore, loading: false },
+          }));
+        }
+      },
+
+      uploadFile: async (path: string, file: File): Promise<string> => {
+        return await uploadContractFile(path, file);
+      },
+    },
+
+    paymentsStore: {
+      walletsByUser: {} as Record<string, Wallet[]>,
+      paymentsByProject: {} as Record<string, Payment[]>,
+      myPayments: [] as Payment[],
+      loading: false,
+
+      getWallets: async (userId: string): Promise<void> => {
+        set((state) => ({
+          paymentsStore: { ...state.paymentsStore, loading: true },
+        }));
+        try {
+          const w = await fetchWallets(userId);
+          set((state) => ({
+            paymentsStore: {
+              ...state.paymentsStore,
+              walletsByUser: {
+                ...state.paymentsStore.walletsByUser,
+                [userId]: w,
+              },
+              loading: false,
+            },
+          }));
+        } catch (e) {
+          console.error(e);
+          set((state) => ({
+            paymentsStore: { ...state.paymentsStore, loading: false },
+          }));
+        }
+      },
+
+      getProjectPayments: async (projectId: string): Promise<void> => {
+        set((state) => ({
+          paymentsStore: { ...state.paymentsStore, loading: true },
+        }));
+        try {
+          const p = await fetchPaymentsByProject(projectId);
+          set((state) => {
+            const nextMap: Record<string, Payment[]> = {
+              ...state.paymentsStore.paymentsByProject,
+              [projectId]: p,
+            };
+            return {
+              paymentsStore: {
+                ...state.paymentsStore,
+                paymentsByProject: nextMap,
+                loading: false,
+              },
+            };
+          });
+        } catch (e) {
+          console.error(e);
+          set((state) => ({
+            paymentsStore: { ...state.paymentsStore, loading: false },
+          }));
+        }
+      },
+
+      getMyPayments: async (): Promise<void> => {
+        set((state) => ({
+          paymentsStore: { ...state.paymentsStore, loading: true },
+        }));
+        try {
+          const p = await fetchMyPayments();
+          set((state) => ({
+            paymentsStore: {
+              ...state.paymentsStore,
+              myPayments: p,
+              loading: false,
+            },
+          }));
+        } catch (e) {
+          console.error(e);
+          set((state) => ({
+            paymentsStore: { ...state.paymentsStore, loading: false },
+          }));
+        }
+      },
+
+      createPayment: async (
+        payload: Parameters<typeof createPayment>[0],
+      ): Promise<Payment> => {
+        set((state) => ({
+          paymentsStore: { ...state.paymentsStore, loading: true },
+        }));
+        try {
+          const p = await createPayment(payload);
+          set((state) => {
+            const prev =
+              state.paymentsStore.paymentsByProject[p.projectId] ?? [];
+            const nextMap: Record<string, Payment[]> = {
+              ...state.paymentsStore.paymentsByProject,
+              [p.projectId]: [p, ...prev],
+            };
+            return {
+              paymentsStore: {
+                ...state.paymentsStore,
+                paymentsByProject: nextMap,
+                myPayments: [p, ...state.paymentsStore.myPayments],
+                loading: false,
+              },
+            };
+          });
+          return p;
+        } catch (e) {
+          console.error(e);
+          set((state) => ({
+            paymentsStore: { ...state.paymentsStore, loading: false },
+          }));
+          throw e;
+        }
+      },
+
+      updatePaymentStatus: async (
+        id: string,
+        status: "pending" | "captured" | "failed",
+      ): Promise<Payment> => {
+        set((state) => ({
+          paymentsStore: { ...state.paymentsStore, loading: true },
+        }));
+        try {
+          const p = await updatePaymentStatus(id, status);
+          set((state) => {
+            const prev =
+              state.paymentsStore.paymentsByProject[p.projectId] ?? [];
+            const nextList: Payment[] = prev.map((x) => (x.id === id ? p : x));
+            const nextMap: Record<string, Payment[]> = {
+              ...state.paymentsStore.paymentsByProject,
+              [p.projectId]: nextList,
+            };
+            return {
+              paymentsStore: {
+                ...state.paymentsStore,
+                paymentsByProject: nextMap,
+                myPayments: state.paymentsStore.myPayments.map((x) =>
+                  x.id === id ? p : x,
+                ),
+                loading: false,
+              },
+            };
+          });
+          return p;
+        } catch (e) {
+          console.error(e);
+          set((state) => ({
+            paymentsStore: { ...state.paymentsStore, loading: false },
+          }));
+          throw e;
         }
       },
     },

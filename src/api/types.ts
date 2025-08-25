@@ -33,6 +33,7 @@ export type TTaskWithUnits = {
   parentId?: string;
   files: string | null;
   measurementUnits: TMeasurementUnit;
+  latePenaltyPerDay: number;
 };
 
 export const UserRoles = {
@@ -73,4 +74,67 @@ export type TUserProfile = {
   first_name: string;
   last_name: string;
   email: string;
+};
+
+// дополнение существующих типов
+
+export type TContract = {
+  id: string;
+  title: string;
+  description: string;
+  start_date: string;
+  end_date: string | null;
+  user_a: string;
+  user_b: string;
+  file_url: string;
+  date_signed_a: string | null;
+  date_signed_b: string | null;
+  status: string;
+  creator_id: string;
+  task_id: string;
+  amount: number | null;
+  tasks: {
+    title: string;
+    start_date: string;
+    end_date: string;
+  };
+};
+
+export type TContractPayload = {
+  title: string;
+  description: string;
+  start_date: string;
+  end_date: string | null;
+  user_a: string;
+  user_b: string;
+  file_url: string;
+  creator_id: string;
+  amount?: number | null;
+  date_signed_a?: string;
+  date_signed_b?: string;
+};
+
+export type ApiPayment = {
+  id: string;
+  payer_id: string;
+  payee_id: string;
+  project_id: string;
+  task_id?: string | null;
+  object_type: "contract" | "invoice";
+  object_id?: string | null;
+  wallet_id: string;
+  amount: number;
+  status: string;
+  description?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ApiWallet = {
+  id: string;
+  user_id: string;
+  currency: string;
+  balance: number;
+  created_at: string;
+  updated_at: string;
 };

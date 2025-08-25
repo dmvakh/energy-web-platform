@@ -10,7 +10,7 @@ import type { User } from "@supabase/supabase-js";
 const tabs = [
   { name: "Обзор", href: "", current: false },
   // { name: "План", href: "schedule", current: false },
-  // { name: "Финансы", href: "finance", current: true },
+  { name: "Финансы", href: "finance", current: true },
   { name: "Документы", href: "document", current: false },
   { name: "Назначения", href: "assign", current: false },
 ];
@@ -80,7 +80,7 @@ export const ProjectLayout = () => {
           </div>
         </div>
       </div>
-      <Outlet context={{ task: selectedTask, user, isAuthor }} />
+      <Outlet context={{ task: selectedTask, user, isAuthor, projectId: id }} />
     </>
   );
 };
